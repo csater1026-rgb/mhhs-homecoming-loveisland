@@ -10,7 +10,7 @@
 <style>
   :root{
     --pink:#e8650f; --pink-soft:#c9531a; --orange:#b8451a; --teal:#e2cfa0;
-    --purple:#d8c9a3; --night:#faf3e0; --night2:#f0e2bf; --card:rgba(255,255,255,.55);
+    --purple:#d8c9a3; --night:#faf8f3; --night2:#f1ede2; --card:rgba(255,255,255,.55);
     --card-border:rgba(32,24,13,.14); --ink:#241a0c; --ink-dim:#6b5a3d;
     --good:#2f8f3e; --bad:#c23b2a;
     font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;
@@ -114,7 +114,8 @@
   .mode-choice{display:flex; flex-direction:column; gap:10px; margin-top:8px}
   .mode-choice label{display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border:1px solid var(--card-border); border-radius:12px; cursor:pointer}
   .mode-choice input{margin-top:3px}
-  footer{text-align:center; color:var(--ink-dim); font-size:.75rem; padding:30px 0 10px}
+  footer{text-align:center; color:var(--ink-dim); font-size:.75rem; padding:30px 0 4px}
+  footer.credit{font-size:.68rem; opacity:.6; padding:2px 0 14px}
 </style>
 </head>
 <body>
@@ -282,6 +283,7 @@ Jordan Lee | girl | guys | 11 | 10,11,12 | 5'6" | About the same height | Music,
   </section>
 
   <footer>All data stays local to this browser (localStorage) — nothing is sent to a server.</footer>
+  <footer class="credit">Created by The Goat</footer>
 </div>
 
 <script>
