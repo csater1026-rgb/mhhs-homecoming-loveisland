@@ -8,10 +8,11 @@ no build step, no server. Data lives entirely in the browser's `localStorage`.
 
 ## Features
 
-- **Join the Villa** — student preference form: identity + who they're open to
-  matching with, grade + which grades they're open to, height + height preference,
-  interests, vibe, ideal date type, music taste, school activities/clubs, optional
-  zodiac sign, and an optional "mystery clue" bio.
+- **Join the Villa** — student preference form: guy/girl identity + who
+  they're interested in, grade + which grades they're open to, height (5'0"
+  up to a 6'5"+ bucket) + optional height preference, interests, vibe, dream
+  date, music, school activities/clubs, optional zodiac sign, and an
+  optional "mystery clue" bio.
 - **Swipe** — Tinder-style mode: students swipe yes/no on anonymized mystery
   profiles; a couple only forms if both sides swiped yes on each other.
 - **Owner Panel** (passcode-gated, classroom-level gate only) — roster

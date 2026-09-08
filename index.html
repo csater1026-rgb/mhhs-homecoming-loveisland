@@ -9,34 +9,30 @@
 <link rel="apple-touch-icon" href="/mhhs-tiger-logo.png" />
 <style>
   :root{
-    --pink:#f4791f; --pink-soft:#ffb066; --orange:#c9531a; --teal:#e8d9b0;
-    --purple:#241a10; --night:#0b0b0b; --night2:#1c1712; --card:rgba(243,233,210,.06);
-    --card-border:rgba(243,233,210,.16); --ink:#f3ead2; --ink-dim:#c9bd9e;
-    --good:#7fcf7a; --bad:#ff6b5c;
+    --pink:#e8650f; --pink-soft:#c9531a; --orange:#b8451a; --teal:#e2cfa0;
+    --purple:#d8c9a3; --night:#faf3e0; --night2:#f0e2bf; --card:rgba(255,255,255,.55);
+    --card-border:rgba(32,24,13,.14); --ink:#241a0c; --ink-dim:#6b5a3d;
+    --good:#2f8f3e; --bad:#c23b2a;
     font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;
   }
   *{box-sizing:border-box}
   body{
     margin:0; min-height:100vh; color:var(--ink);
-    background:
-      radial-gradient(circle at 15% 10%, rgba(244,121,31,.22), transparent 45%),
-      radial-gradient(circle at 85% 0%, rgba(232,217,176,.1), transparent 40%),
-      radial-gradient(circle at 50% 100%, rgba(120,60,20,.3), transparent 55%),
-      linear-gradient(180deg, var(--night), var(--night2));
+    background:linear-gradient(180deg, var(--night), var(--night2));
     background-attachment:fixed;
   }
-  a{color:var(--teal)}
+  a{color:var(--pink-soft)}
   .wrap{max-width:980px; margin:0 auto; padding:20px 16px 80px}
   header.top{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:18px 16px}
   .brand{display:flex; align-items:center; gap:10px; font-weight:800; font-size:1.25rem; letter-spacing:.2px}
-  .brand .heart{width:38px; height:38px; filter:drop-shadow(0 0 10px rgba(244,121,31,.7))}
+  .brand .heart{width:38px; height:38px; filter:drop-shadow(0 2px 4px rgba(32,24,13,.25))}
   .brand small{display:block; font-weight:500; color:var(--ink-dim); font-size:.7rem; letter-spacing:1.5px; text-transform:uppercase}
   nav.tabs{display:flex; gap:8px; flex-wrap:wrap}
   nav.tabs button{
     background:var(--card); border:1px solid var(--card-border); color:var(--ink);
     padding:9px 16px; border-radius:999px; cursor:pointer; font-weight:600; font-size:.85rem;
   }
-  nav.tabs button.active{background:linear-gradient(135deg,var(--pink),var(--orange)); border-color:transparent; box-shadow:0 4px 18px rgba(244,121,31,.4)}
+  nav.tabs button.active{background:linear-gradient(135deg,var(--pink),var(--orange)); border-color:transparent; color:#fff; box-shadow:0 4px 18px rgba(232,101,15,.35)}
   .view{display:none}
   .view.active{display:block}
   .card{
@@ -50,62 +46,62 @@
   label.field > span{display:block; font-weight:600; font-size:.85rem; margin-bottom:6px}
   input[type=text], input[type=password], textarea, select{
     width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--card-border);
-    background:rgba(0,0,0,.25); color:var(--ink); font-size:.95rem; font-family:inherit;
+    background:#fff; color:var(--ink); font-size:.95rem; font-family:inherit;
   }
   textarea{resize:vertical; min-height:64px}
-  input::placeholder, textarea::placeholder{color:#9a8a6d}
+  input::placeholder, textarea::placeholder{color:#8a7857}
   .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px}
   .chip{
     display:flex; align-items:center; gap:6px; padding:8px 13px; border-radius:999px;
-    border:1px solid var(--card-border); background:rgba(0,0,0,.2); cursor:pointer; font-size:.85rem; user-select:none;
+    border:1px solid var(--card-border); background:rgba(255,255,255,.6); cursor:pointer; font-size:.85rem; user-select:none;
   }
   .chip input{accent-color:var(--pink)}
-  .chip.checked{background:linear-gradient(135deg, rgba(244,121,31,.35), rgba(201,83,26,.25)); border-color:var(--pink)}
+  .chip.checked{background:linear-gradient(135deg, rgba(232,101,15,.3), rgba(184,69,26,.22)); border-color:var(--pink)}
   .radio-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:4px}
   .radio-row label{display:flex; align-items:center; gap:6px; font-size:.9rem; cursor:pointer}
   .hint{font-size:.75rem; color:var(--ink-dim); margin-top:4px}
   .btn{
     border:none; border-radius:10px; padding:11px 18px; font-weight:700; font-size:.9rem; cursor:pointer;
-    color:#1a140c; background:linear-gradient(135deg, var(--teal), #fff6e6);
+    color:#241a0c; background:var(--teal);
   }
   .btn.primary{color:#fff; background:linear-gradient(135deg, var(--pink), var(--orange))}
   .btn.ghost{background:transparent; border:1px solid var(--card-border); color:var(--ink)}
-  .btn.danger{background:linear-gradient(135deg,#ff6b5c,#b8301c); color:#fff}
+  .btn.danger{background:linear-gradient(135deg,#e14d3a,#a8281a); color:#fff}
   .btn:disabled{opacity:.4; cursor:not-allowed}
   .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
   .banner{padding:12px 14px; border-radius:12px; font-size:.85rem; margin-top:12px}
-  .banner.ok{background:rgba(127,207,122,.15); border:1px solid rgba(127,207,122,.4); color:var(--good)}
-  .banner.err{background:rgba(255,107,92,.15); border:1px solid rgba(255,107,92,.4); color:var(--bad)}
+  .banner.ok{background:rgba(47,143,62,.12); border:1px solid rgba(47,143,62,.35); color:var(--good)}
+  .banner.err{background:rgba(194,59,42,.12); border:1px solid rgba(194,59,42,.35); color:var(--bad)}
   table{width:100%; border-collapse:collapse; font-size:.85rem}
   th, td{text-align:left; padding:9px 8px; border-bottom:1px solid var(--card-border); vertical-align:top}
   th{color:var(--ink-dim); font-weight:600; font-size:.75rem; text-transform:uppercase; letter-spacing:.5px}
-  .tag-mini{display:inline-block; background:rgba(255,255,255,.08); border-radius:6px; padding:2px 7px; margin:1px 3px 1px 0; font-size:.72rem}
+  .tag-mini{display:inline-block; background:rgba(32,24,13,.07); border-radius:6px; padding:2px 7px; margin:1px 3px 1px 0; font-size:.72rem}
   .roster-actions button{margin-right:6px}
   .couple-card{
-    background:linear-gradient(160deg, rgba(244,121,31,.16), rgba(120,60,20,.16));
+    background:linear-gradient(160deg, rgba(232,101,15,.18), rgba(184,69,26,.14));
     border:1px solid var(--card-border); border-radius:18px; padding:24px; text-align:center;
   }
   .couple-names{font-size:1.6rem; font-weight:800; margin:10px 0}
   .couple-names .x{color:var(--pink-soft); margin:0 10px}
-  .clue{background:rgba(0,0,0,.25); border-radius:12px; padding:12px 16px; margin:8px 0; font-style:italic}
+  .clue{background:rgba(255,255,255,.6); border-radius:12px; padding:12px 16px; margin:8px 0; font-style:italic}
   .why{margin-top:14px; font-size:.85rem; color:var(--ink-dim)}
   .reveal-progress{font-size:.8rem; color:var(--ink-dim); margin-bottom:10px}
   .leftover{font-size:.85rem; color:var(--ink-dim)}
   .locked-list li{margin-bottom:6px; font-size:.85rem}
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
   @media(max-width:640px){.grid2{grid-template-columns:1fr}}
-  code.tmpl{display:block; white-space:pre-wrap; background:rgba(0,0,0,.35); padding:12px; border-radius:10px; font-size:.75rem; color:var(--teal); margin-top:8px}
-  .count-pill{background:rgba(0,0,0,.25); border-radius:999px; padding:3px 10px; font-size:.72rem; color:var(--ink-dim)}
+  code.tmpl{display:block; white-space:pre-wrap; background:#241a0c; padding:12px; border-radius:10px; font-size:.75rem; color:var(--teal); margin-top:8px}
+  .count-pill{background:rgba(32,24,13,.07); border-radius:999px; padding:3px 10px; font-size:.72rem; color:var(--ink-dim)}
   .swipe-card{
-    background:linear-gradient(160deg, rgba(201,83,26,.18), rgba(244,121,31,.12));
+    background:linear-gradient(160deg, rgba(184,69,26,.2), rgba(232,101,15,.14));
     border:1px solid var(--card-border); border-radius:20px; padding:26px; text-align:center; max-width:420px; margin:16px auto 0;
   }
   .swipe-card h4{margin:0 0 10px; font-size:1rem; color:var(--pink-soft)}
-  .swipe-bio{background:rgba(0,0,0,.25); border-radius:12px; padding:12px 16px; margin:12px 0; font-style:italic}
+  .swipe-bio{background:rgba(255,255,255,.6); border-radius:12px; padding:12px 16px; margin:12px 0; font-style:italic}
   .swipe-actions{display:flex; justify-content:center; gap:18px; margin-top:18px}
   .swipe-actions button{width:64px; height:64px; border-radius:50%; font-size:1.5rem; border:none; cursor:pointer}
-  .swipe-pass{background:rgba(255,107,92,.2); border:2px solid var(--bad) !important; color:var(--bad)}
-  .swipe-like{background:rgba(127,207,122,.2); border:2px solid var(--good) !important; color:var(--good)}
+  .swipe-pass{background:rgba(194,59,42,.16); border:2px solid var(--bad) !important; color:var(--bad)}
+  .swipe-like{background:rgba(47,143,62,.16); border:2px solid var(--good) !important; color:var(--good)}
   .swipe-progress{text-align:center; color:var(--ink-dim); font-size:.8rem; margin-top:12px}
   .mode-choice{display:flex; flex-direction:column; gap:10px; margin-top:8px}
   .mode-choice label{display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border:1px solid var(--card-border); border-radius:12px; cursor:pointer}
@@ -204,8 +200,8 @@
     <div class="card">
       <h3 style="margin-top:0">Bulk import ("scan the stack in")</h3>
       <p class="muted">Paste one islander per line, fields separated by <code>|</code>. Great for quickly transcribing a stack of scanned/paper forms at once.</p>
-      <code class="tmpl">Name | Identity(guy/girl/other) | Open to(guys,girls,other) | Grade(9/10/11/12) | Open to grades(comma list of 9,10,11,12) | Height(e.g. 5'6") | Height pref(comma: Taller than me,Shorter than me,About the same height,No preference) | Interests(comma list) | Vibe words(comma list) | Date ideas(comma list) | Music(comma list) | Activities/clubs(comma list) | Zodiac(optional) | Mystery clue(optional)
-Jordan Lee | girl | guys,other | 11 | 10,11,12 | 5'6" | About the same height | Music,Gaming | Funny,Bold | Movie Night,Arcade/Games | Pop,Indie/Alt | Band/Choir/Orchestra,Honor Society | Leo | Once tried to teach a cat to skateboard.</code>
+      <code class="tmpl">Name | Identity(guy/girl) | Open to(guys,girls) | Grade(9/10/11/12) | Open to grades(comma list of 9,10,11,12) | Height(5'0" to 6'4", or 6'5"+ for taller) | Height pref(comma: Taller than me,Shorter than me,About the same height,No preference) | Interests(comma list) | Vibe words(comma list) | Date ideas(comma list) | Music(comma list) | Activities/clubs(comma list) | Zodiac(optional) | Mystery clue(optional)
+Jordan Lee | girl | guys | 11 | 10,11,12 | 5'6" | About the same height | Music,Gaming | Funny | Movie Night,Arcade/Games | Pop | Band/Choir/Orchestra,Honor Society | Leo | Once tried to teach a cat to skateboard.</code>
       <label class="field"><span>Paste rows here</span><textarea id="bulk-input" rows="6" placeholder="Paste scanned/transcribed rows here…"></textarea></label>
       <div class="row"><button class="btn" id="bulk-submit">Import rows</button></div>
       <div id="bulk-banner"></div>
@@ -285,23 +281,26 @@ Jordan Lee | girl | guys,other | 11 | 10,11,12 | 5'6" | About the same height | 
 const STORAGE_KEY = 'love-island-homecoming-v1';
 
 const TAGS = {
-  interests: ['Sports','Music','Gaming','Art & Design','Movies & TV','Outdoors/Nature','Cooking/Baking','Reading','Fashion','Fitness/Gym','Cars','Photography','Dance','Theater/Drama','Volunteering','Tech/Coding'],
-  vibes: ['Funny','Chill','Adventurous','Romantic','Competitive','Mysterious','Sweet','Bold','Thoughtful','Confident','Shy at first'],
-  dateTypes: ['Fancy Dinner','Arcade/Games','Movie Night','Outdoor Adventure','Chill Hangout','Dancing','Coffee & Talk','Sports Event'],
-  music: ['Pop','Hip-Hop/Rap','Country','Rock','Indie/Alt','EDM/Dance','R&B/Soul','Latin'],
-  activities: ['Varsity/JV Sports','Band/Choir/Orchestra','Drama/Theater','Student Government','Honor Society','FFA/4-H','Robotics/STEM Club','Art Club','Debate/Speech','Yearbook/Newspaper','Key Club/Volunteering','Part-time Job','Church/Youth Group']
+  interests: ['Sports','Music','Gaming','Art','Movies & TV','Outdoors','Cooking','Reading','Fashion','Fitness','Dance','Tech'],
+  vibes: ['Funny','Chill','Adventurous','Romantic','Mysterious','Sweet','Confident'],
+  dateTypes: ['Fancy Dinner','Arcade/Games','Movie Night','Outdoor Adventure','Chill Hangout','Dancing'],
+  music: ['Pop','Hip-Hop/Rap','Country','Rock','EDM/Dance','R&B/Soul'],
+  activities: ['Varsity/JV Sports','Band/Choir/Orchestra','Drama/Theater','Student Government','Honor Society','FFA/4-H','Art Club','Part-time Job']
 };
 const EMOJI = {
-  interests:{'Sports':'⚽','Music':'🎵','Gaming':'🎮','Art & Design':'🎨','Movies & TV':'🎬','Outdoors/Nature':'🌲','Cooking/Baking':'🍳','Reading':'📚','Fashion':'👗','Fitness/Gym':'🏋️','Cars':'🚗','Photography':'📷','Dance':'💃','Theater/Drama':'🎭','Volunteering':'🤝','Tech/Coding':'💻'},
-  vibes:{'Funny':'😂','Chill':'😌','Adventurous':'🧗','Romantic':'🌹','Competitive':'🏆','Mysterious':'🕵️','Sweet':'🍯','Bold':'🔥','Thoughtful':'💭','Confident':'😎','Shy at first':'🙈'},
-  dateTypes:{'Fancy Dinner':'🍽️','Arcade/Games':'🕹️','Movie Night':'🎥','Outdoor Adventure':'🏕️','Chill Hangout':'🛋️','Dancing':'💃','Coffee & Talk':'☕','Sports Event':'🏟️'},
-  music:{'Pop':'🎤','Hip-Hop/Rap':'🎧','Country':'🤠','Rock':'🎸','Indie/Alt':'🎹','EDM/Dance':'🪩','R&B/Soul':'🎶','Latin':'💃'},
-  activities:{'Varsity/JV Sports':'🏅','Band/Choir/Orchestra':'🎺','Drama/Theater':'🎭','Student Government':'🏛️','Honor Society':'🎓','FFA/4-H':'🌾','Robotics/STEM Club':'🤖','Art Club':'🖌️','Debate/Speech':'🎙️','Yearbook/Newspaper':'📰','Key Club/Volunteering':'🤝','Part-time Job':'💼','Church/Youth Group':'⛪'}
+  interests:{'Sports':'⚽','Music':'🎵','Gaming':'🎮','Art':'🎨','Movies & TV':'🎬','Outdoors':'🌲','Cooking':'🍳','Reading':'📚','Fashion':'👗','Fitness':'🏋️','Dance':'💃','Tech':'💻'},
+  vibes:{'Funny':'😂','Chill':'😌','Adventurous':'🧗','Romantic':'🌹','Mysterious':'🕵️','Sweet':'🍯','Confident':'😎'},
+  dateTypes:{'Fancy Dinner':'🍽️','Arcade/Games':'🕹️','Movie Night':'🎥','Outdoor Adventure':'🏕️','Chill Hangout':'🛋️','Dancing':'💃'},
+  music:{'Pop':'🎤','Hip-Hop/Rap':'🎧','Country':'🤠','Rock':'🎸','EDM/Dance':'🪩','R&B/Soul':'🎶'},
+  activities:{'Varsity/JV Sports':'🏅','Band/Choir/Orchestra':'🎺','Drama/Theater':'🎭','Student Government':'🏛️','Honor Society':'🎓','FFA/4-H':'🌾','Art Club':'🖌️','Part-time Job':'💼'}
 };
-const IDENTITY_LABEL = {guy:'Guy', girl:'Girl', other:'Nonbinary / Other'};
+const IDENTITY_LABEL = {guy:'Guy', girl:'Girl'};
 const GRADES = ['9','10','11','12'];
 const GRADE_LABEL = {'9':'9th (Freshman)','10':'10th (Sophomore)','11':'11th (Junior)','12':'12th (Senior)'};
 const HEIGHT_PREF = ['Taller than me','Shorter than me','About the same height','No preference'];
+const HEIGHT_OPTIONS = [];
+for(let inches=60; inches<=76; inches++){ HEIGHT_OPTIONS.push({ value: inches, label: `${Math.floor(inches/12)}'${inches%12}"` }); }
+HEIGHT_OPTIONS.push({ value: 77, label: `6'5"+` });
 const ZODIAC = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
 const ZODIAC_EMOJI = {'Aries':'♈','Taurus':'♉','Gemini':'♊','Cancer':'♋','Leo':'♌','Virgo':'♍','Libra':'♎','Scorpio':'♏','Sagittarius':'♐','Capricorn':'♑','Aquarius':'♒','Pisces':'♓'};
 const WEIGHTS = {interests:3, vibes:2.5, dateTypes:2, music:1.5, activities:2.5};
@@ -380,18 +379,16 @@ function chipGroup(prefix, groupKey, max){
 function personFormHTML(prefix){
   return `
     <label class="field"><span>Name</span><input type="text" id="${prefix}-name" placeholder="First & last name" /></label>
-    <label class="field"><span>How do you identify?</span>
+    <label class="field"><span>I am a:</span>
       <div class="radio-row">
         <label><input type="radio" name="${prefix}-identity" value="guy"> Guy</label>
         <label><input type="radio" name="${prefix}-identity" value="girl"> Girl</label>
-        <label><input type="radio" name="${prefix}-identity" value="other"> Nonbinary / other</label>
       </div>
     </label>
-    <label class="field"><span>Open to matching with</span>
+    <label class="field"><span>Interested in:</span>
       <div class="radio-row">
         <label><input type="checkbox" data-name="${prefix}-lookingfor" value="guys"> Guys</label>
         <label><input type="checkbox" data-name="${prefix}-lookingfor" value="girls"> Girls</label>
-        <label><input type="checkbox" data-name="${prefix}-lookingfor" value="other"> Nonbinary / other</label>
       </div>
     </label>
     <label class="field"><span>Grade</span>
@@ -399,40 +396,34 @@ function personFormHTML(prefix){
         ${GRADES.map(g => `<label><input type="radio" name="${prefix}-grade" value="${g}"> ${GRADE_LABEL[g]}</label>`).join('')}
       </div>
     </label>
-    <label class="field"><span>Open to matching with which grades</span>
+    <label class="field"><span>Grades you're open to dating</span>
       <div class="radio-row">
         ${GRADES.map(g => `<label><input type="checkbox" data-name="${prefix}-gradeopento" value="${g}"> ${GRADE_LABEL[g]}</label>`).join('')}
       </div>
     </label>
     <label class="field"><span>Height</span>
-      <div class="row">
-        <select id="${prefix}-height-ft" style="width:auto">
-          <option value="">Feet</option>
-          ${[4,5,6,7].map(f => `<option value="${f}">${f} ft</option>`).join('')}
-        </select>
-        <select id="${prefix}-height-in" style="width:auto">
-          <option value="">Inches</option>
-          ${Array.from({length:12},(_,i)=>i).map(i => `<option value="${i}">${i} in</option>`).join('')}
-        </select>
-      </div>
+      <select id="${prefix}-height">
+        <option value="">Choose height</option>
+        ${HEIGHT_OPTIONS.map(h => `<option value="${h.value}">${h.label}</option>`).join('')}
+      </select>
     </label>
-    <label class="field"><span>Height preference for a match (optional)</span>
+    <label class="field"><span>Preferred height in a match (optional)</span>
       <div class="chips" data-group="${prefix}-heightpref" data-max="0">
         ${HEIGHT_PREF.map(h => `<label class="chip"><input type="checkbox" value="${h}" data-name="${prefix}-heightpref"/> ${h}</label>`).join('')}
       </div>
     </label>
     <label class="field"><span>Interests</span>${chipGroup(prefix,'interests')}</label>
     <label class="field"><span>Your vibe</span>${chipGroup(prefix,'vibes',3)}</label>
-    <label class="field"><span>Ideal date</span>${chipGroup(prefix,'dateTypes',3)}</label>
-    <label class="field"><span>Music taste</span>${chipGroup(prefix,'music')}</label>
-    <label class="field"><span>School activities &amp; clubs</span>${chipGroup(prefix,'activities')}</label>
-    <label class="field"><span>Zodiac sign (optional, just for fun)</span>
+    <label class="field"><span>Dream date</span>${chipGroup(prefix,'dateTypes',3)}</label>
+    <label class="field"><span>Music</span>${chipGroup(prefix,'music')}</label>
+    <label class="field"><span>Activities &amp; clubs</span>${chipGroup(prefix,'activities')}</label>
+    <label class="field"><span>Zodiac (optional)</span>
       <select id="${prefix}-zodiac">
         <option value="">Prefer not to say</option>
         ${ZODIAC.map(z => `<option value="${z}">${ZODIAC_EMOJI[z]} ${z}</option>`).join('')}
       </select>
     </label>
-    <label class="field"><span>Mystery clue (optional, shown before your name in the reveal)</span>
+    <label class="field"><span>Mystery clue (optional)</span>
       <textarea id="${prefix}-bio" maxlength="140" placeholder="A fun hint about you…"></textarea>
     </label>
   `;
@@ -461,9 +452,8 @@ function readPersonForm(prefix){
   const gradeEl = document.querySelector(`input[name="${prefix}-grade"]:checked`);
   const grade = gradeEl ? gradeEl.value : null;
   const gradeOpenTo = [...document.querySelectorAll(`input[data-name="${prefix}-gradeopento"]:checked`)].map(i=>i.value);
-  const ft = document.getElementById(prefix+'-height-ft').value;
-  const inch = document.getElementById(prefix+'-height-in').value;
-  const heightIn = (ft!=='' && inch!=='') ? (parseInt(ft,10)*12 + parseInt(inch,10)) : null;
+  const heightVal = document.getElementById(prefix+'-height').value;
+  const heightIn = heightVal!=='' ? parseInt(heightVal,10) : null;
   const heightPref = [...document.querySelectorAll(`input[data-name="${prefix}-heightpref"]:checked`)].map(i=>i.value);
   const interests = [...document.querySelectorAll(`input[data-name="${prefix}-interests"]:checked`)].map(i=>i.value);
   const vibes = [...document.querySelectorAll(`input[data-name="${prefix}-vibes"]:checked`)].map(i=>i.value);
@@ -492,8 +482,7 @@ function fillPersonForm(prefix, p){
   const gradeEl = document.querySelector(`input[name="${prefix}-grade"][value="${p.grade}"]`);
   if(gradeEl) gradeEl.checked = true;
   document.querySelectorAll(`input[data-name="${prefix}-gradeopento"]`).forEach(i => i.checked = (p.gradeOpenTo||[]).includes(i.value));
-  document.getElementById(prefix+'-height-ft').value = p.heightIn!=null ? Math.floor(p.heightIn/12) : '';
-  document.getElementById(prefix+'-height-in').value = p.heightIn!=null ? (p.heightIn%12) : '';
+  document.getElementById(prefix+'-height').value = p.heightIn!=null ? Math.min(p.heightIn,77) : '';
   document.querySelectorAll(`input[data-name="${prefix}-heightpref"]`).forEach(i => { i.checked = (p.heightPref||[]).includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
   document.querySelectorAll(`input[data-name="${prefix}-interests"]`).forEach(i => { i.checked = p.interests.includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
   document.querySelectorAll(`input[data-name="${prefix}-vibes"]`).forEach(i => { i.checked = p.vibes.includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
@@ -507,8 +496,7 @@ function clearPersonForm(prefix){
   document.getElementById(prefix+'-name').value = '';
   document.querySelectorAll(`input[name="${prefix}-identity"]`).forEach(i=>i.checked=false);
   document.querySelectorAll(`input[name="${prefix}-grade"]`).forEach(i=>i.checked=false);
-  document.getElementById(prefix+'-height-ft').value = '';
-  document.getElementById(prefix+'-height-in').value = '';
+  document.getElementById(prefix+'-height').value = '';
   document.getElementById(prefix+'-zodiac').value = '';
   document.querySelectorAll(`input[data-name^="${prefix}-"]`).forEach(i=>{ i.checked=false; if(i.closest('.chip')) i.closest('.chip').classList.remove('checked'); });
   document.getElementById(prefix+'-bio').value = '';
@@ -564,6 +552,7 @@ document.getElementById('owner-cancel-edit').addEventListener('click', () => {
 
 function formatHeight(inches){
   if(inches==null) return '—';
+  if(inches>=77) return `6'5"+`;
   return `${Math.floor(inches/12)}'${inches%12}"`;
 }
 function renderRoster(){
@@ -575,7 +564,7 @@ function renderRoster(){
       <td>${escapeHtml(p.name)}</td>
       <td>${GRADE_LABEL[p.grade]||'—'}</td>
       <td>${IDENTITY_LABEL[p.identity]||'—'}</td>
-      <td>${p.lookingFor.map(l=>IDENTITY_LABEL[l==='guys'?'guy':l==='girls'?'girl':'other']).join(', ')}</td>
+      <td>${p.lookingFor.map(l=>IDENTITY_LABEL[l==='guys'?'guy':'girl']).join(', ')}</td>
       <td>${formatHeight(p.heightIn)}</td>
       <td>${p.interests.map(t=>`<span class="tag-mini">${EMOJI.interests[t]||''} ${t}</span>`).join('')}</td>
       <td>${p.vibes.map(t=>`<span class="tag-mini">${EMOJI.vibes[t]||''} ${t}</span>`).join('')}</td>
@@ -634,15 +623,19 @@ document.getElementById('bulk-submit').addEventListener('click', () => {
     if(parts.length < 13){ problems.push(`Line ${i+1}: expected 13-14 fields, got ${parts.length}.`); return; }
     const [name, identityRaw, lookingRaw, gradeRaw, gradeOpenRaw, heightRaw, heightPrefRaw, interestsRaw, vibesRaw, dateRaw, musicRaw, activitiesRaw, zodiacRaw, bio] = parts;
     if(!name){ problems.push(`Line ${i+1}: missing name.`); return; }
-    const identity = ['guy','girl','other'].includes(identityRaw.toLowerCase()) ? identityRaw.toLowerCase() : 'other';
-    let lookingFor = lookingRaw.split(',').map(s=>s.trim().toLowerCase()).filter(s=>['guys','girls','other'].includes(s));
-    if(!lookingFor.length){ lookingFor = ['guys','girls','other']; problems.push(`Line ${i+1} (${name}): no valid "open to" values, defaulted to everyone.`); }
+    const identityLower = identityRaw.toLowerCase();
+    if(!['guy','girl'].includes(identityLower)) problems.push(`Line ${i+1} (${name}): identity "${identityRaw}" not recognized (use guy or girl), defaulted to guy.`);
+    const identity = identityLower==='girl' ? 'girl' : 'guy';
+    let lookingFor = lookingRaw.split(',').map(s=>s.trim().toLowerCase()).filter(s=>['guys','girls'].includes(s));
+    if(!lookingFor.length){ lookingFor = ['guys','girls']; problems.push(`Line ${i+1} (${name}): no valid "open to" values, defaulted to everyone.`); }
     const grade = GRADES.includes(gradeRaw.trim()) ? gradeRaw.trim() : null;
     if(!grade) problems.push(`Line ${i+1} (${name}): grade "${gradeRaw}" not recognized (use 9, 10, 11, or 12).`);
     let gradeOpenTo = gradeOpenRaw.split(',').map(s=>s.trim()).filter(s=>GRADES.includes(s));
     if(!gradeOpenTo.length){ gradeOpenTo = GRADES.slice(); problems.push(`Line ${i+1} (${name}): no valid "open to grades" values, defaulted to all grades.`); }
-    const heightIn = parseHeight(heightRaw);
+    let heightIn = parseHeight(heightRaw);
     if(heightIn==null) problems.push(`Line ${i+1} (${name}): height "${heightRaw}" not recognized (use e.g. 5'6").`);
+    else if(heightIn<60){ heightIn=60; problems.push(`Line ${i+1} (${name}): height below the 5'0" minimum, set to 5'0".`); }
+    else if(heightIn>77){ heightIn=77; }
     const heightPref = normalizeTagList(heightPrefRaw, HEIGHT_PREF);
     const interests = normalizeTagList(interestsRaw, TAGS.interests);
     const vibes = normalizeTagList(vibesRaw, TAGS.vibes).slice(0,3);
@@ -692,7 +685,7 @@ document.getElementById('lock-add').addEventListener('click', () => {
 });
 
 // ---------- Matching ----------
-function bucketOf(p){ return p.identity === 'guy' ? 'guys' : p.identity === 'girl' ? 'girls' : 'other'; }
+function bucketOf(p){ return p.identity === 'guy' ? 'guys' : 'girls'; }
 function eligible(a,b){
   if(a.id===b.id) return false;
   if(!(a.lookingFor.includes(bucketOf(b)) && b.lookingFor.includes(bucketOf(a)))) return false;
