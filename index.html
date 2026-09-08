@@ -200,8 +200,8 @@
     <div class="card">
       <h3 style="margin-top:0">Bulk import ("scan the stack in")</h3>
       <p class="muted">Paste one islander per line, fields separated by <code>|</code>. Great for quickly transcribing a stack of scanned/paper forms at once.</p>
-      <code class="tmpl">Name | Identity(guy/girl) | Open to(guys,girls) | Grade(9/10/11/12) | Open to grades(comma list of 9,10,11,12) | Height(5'0" to 6'4", or 6'5"+ for taller) | Height pref(comma: Taller than me,Shorter than me,About the same height,No preference) | Interests(comma list) | Vibe words(comma list) | Date ideas(comma list) | Music(comma list) | Activities/clubs(comma list) | Zodiac(optional) | Mystery clue(optional)
-Jordan Lee | girl | guys | 11 | 10,11,12 | 5'6" | About the same height | Music,Gaming | Funny | Movie Night,Arcade/Games | Pop | Band/Choir/Orchestra,Honor Society | Leo | Once tried to teach a cat to skateboard.</code>
+      <code class="tmpl">Name | Identity(guy/girl) | Open to(guys,girls) | Grade(9/10/11/12) | Open to grades(comma list of 9,10,11,12) | Height(5'0" to 6'4", or 6'5"+ for taller) | Height pref(comma: Taller than me,Shorter than me,About the same height,No preference) | Interests(comma list, any text works) | Vibe words(comma list, any text works) | Date ideas(comma list, any text works) | Music(comma list, any text works) | Activities/clubs(comma list, any text works) | Zodiac(optional) | Mystery clue(optional)
+Jordan Lee | girl | guys | 11 | 10,11,12 | 5'6" | About the same height | Music,Gaming,Homemade Ramen | Funny | Movie Night,Stargazing on the roof | Rihanna - Diamonds | Band/Choir/Orchestra,Honor Society | Leo | Once tried to teach a cat to skateboard.</code>
       <label class="field"><span>Paste rows here</span><textarea id="bulk-input" rows="6" placeholder="Paste scanned/transcribed rows here…"></textarea></label>
       <div class="row"><button class="btn" id="bulk-submit">Import rows</button></div>
       <div id="bulk-banner"></div>
@@ -369,12 +369,22 @@ document.getElementById('owner-change-pass').addEventListener('click', () => {
 });
 
 // ---------- Person form ----------
+const OTHER_PLACEHOLDER = {
+  interests: 'Type your own interest…', vibes: 'Type your own word…',
+  dateTypes: 'Describe your dream date…', music: 'Your favorite song or artist…',
+  activities: 'Type your own activity/club…'
+};
+function tagEmoji(groupKey, t){ return (EMOJI[groupKey] && EMOJI[groupKey][t]) ? EMOJI[groupKey][t] : '⭐'; }
 function chipGroup(prefix, groupKey, max){
   const items = TAGS[groupKey];
   const emoji = EMOJI[groupKey];
+  const otherId = `${prefix}-${groupKey}-other`;
   return `<div class="chips" data-group="${prefix}-${groupKey}" data-max="${max||0}">` +
     items.map(t => `<label class="chip"><input type="checkbox" value="${t}" data-name="${prefix}-${groupKey}"/> ${emoji[t]||''} ${t}</label>`).join('') +
-    `</div>` + (max ? `<div class="hint">Choose up to ${max}.</div>` : '');
+    `<label class="chip"><input type="checkbox" value="Other" data-name="${prefix}-${groupKey}" data-other-toggle="${otherId}"/> ✏️ Other</label>` +
+    `</div>` +
+    `<input type="text" id="${otherId}" class="other-input" style="display:none; margin-top:6px" maxlength="60" placeholder="${OTHER_PLACEHOLDER[groupKey]||'Type your own…'}" />` +
+    (max ? `<div class="hint">Choose up to ${max} (Other counts as one).</div>` : '');
 }
 function personFormHTML(prefix){
   return `
@@ -440,9 +450,38 @@ function wireChipHighlighting(container){
         if(checked.length > max){ input.checked = false; }
       }
       sync();
+      if(input.dataset.otherToggle){
+        const otherInput = document.getElementById(input.dataset.otherToggle);
+        if(otherInput){
+          otherInput.style.display = input.checked ? '' : 'none';
+          if(input.checked) otherInput.focus();
+          else otherInput.value = '';
+        }
+      }
     });
     sync();
   });
+}
+function resolveOther(prefix, groupKey, values){
+  const idx = values.indexOf('Other');
+  if(idx === -1) return values;
+  const el = document.getElementById(`${prefix}-${groupKey}-other`);
+  const text = el ? (el.value || '').trim() : '';
+  const copy = values.slice();
+  if(text) copy[idx] = text; else copy.splice(idx,1);
+  return copy;
+}
+function fillChipGroupWithOther(prefix, groupKey, values){
+  values = values || [];
+  const known = TAGS[groupKey];
+  const customVal = values.find(v => !known.includes(v));
+  document.querySelectorAll(`input[data-name="${prefix}-${groupKey}"]`).forEach(i => {
+    const checked = i.value === 'Other' ? !!customVal : values.includes(i.value);
+    i.checked = checked;
+    i.closest('.chip').classList.toggle('checked', checked);
+  });
+  const otherInput = document.getElementById(`${prefix}-${groupKey}-other`);
+  if(otherInput){ otherInput.value = customVal || ''; otherInput.style.display = customVal ? '' : 'none'; }
 }
 function readPersonForm(prefix){
   const name = (document.getElementById(prefix+'-name').value || '').trim();
@@ -455,11 +494,11 @@ function readPersonForm(prefix){
   const heightVal = document.getElementById(prefix+'-height').value;
   const heightIn = heightVal!=='' ? parseInt(heightVal,10) : null;
   const heightPref = [...document.querySelectorAll(`input[data-name="${prefix}-heightpref"]:checked`)].map(i=>i.value);
-  const interests = [...document.querySelectorAll(`input[data-name="${prefix}-interests"]:checked`)].map(i=>i.value);
-  const vibes = [...document.querySelectorAll(`input[data-name="${prefix}-vibes"]:checked`)].map(i=>i.value);
-  const dateTypes = [...document.querySelectorAll(`input[data-name="${prefix}-dateTypes"]:checked`)].map(i=>i.value);
-  const music = [...document.querySelectorAll(`input[data-name="${prefix}-music"]:checked`)].map(i=>i.value);
-  const activities = [...document.querySelectorAll(`input[data-name="${prefix}-activities"]:checked`)].map(i=>i.value);
+  const interests = resolveOther(prefix,'interests', [...document.querySelectorAll(`input[data-name="${prefix}-interests"]:checked`)].map(i=>i.value));
+  const vibes = resolveOther(prefix,'vibes', [...document.querySelectorAll(`input[data-name="${prefix}-vibes"]:checked`)].map(i=>i.value));
+  const dateTypes = resolveOther(prefix,'dateTypes', [...document.querySelectorAll(`input[data-name="${prefix}-dateTypes"]:checked`)].map(i=>i.value));
+  const music = resolveOther(prefix,'music', [...document.querySelectorAll(`input[data-name="${prefix}-music"]:checked`)].map(i=>i.value));
+  const activities = resolveOther(prefix,'activities', [...document.querySelectorAll(`input[data-name="${prefix}-activities"]:checked`)].map(i=>i.value));
   const zodiac = document.getElementById(prefix+'-zodiac').value;
   const bio = (document.getElementById(prefix+'-bio').value || '').trim();
   return { name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, zodiac, bio };
@@ -484,11 +523,11 @@ function fillPersonForm(prefix, p){
   document.querySelectorAll(`input[data-name="${prefix}-gradeopento"]`).forEach(i => i.checked = (p.gradeOpenTo||[]).includes(i.value));
   document.getElementById(prefix+'-height').value = p.heightIn!=null ? Math.min(p.heightIn,77) : '';
   document.querySelectorAll(`input[data-name="${prefix}-heightpref"]`).forEach(i => { i.checked = (p.heightPref||[]).includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
-  document.querySelectorAll(`input[data-name="${prefix}-interests"]`).forEach(i => { i.checked = p.interests.includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
-  document.querySelectorAll(`input[data-name="${prefix}-vibes"]`).forEach(i => { i.checked = p.vibes.includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
-  document.querySelectorAll(`input[data-name="${prefix}-dateTypes"]`).forEach(i => { i.checked = p.dateTypes.includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
-  document.querySelectorAll(`input[data-name="${prefix}-music"]`).forEach(i => { i.checked = p.music.includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
-  document.querySelectorAll(`input[data-name="${prefix}-activities"]`).forEach(i => { i.checked = (p.activities||[]).includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
+  fillChipGroupWithOther(prefix, 'interests', p.interests);
+  fillChipGroupWithOther(prefix, 'vibes', p.vibes);
+  fillChipGroupWithOther(prefix, 'dateTypes', p.dateTypes);
+  fillChipGroupWithOther(prefix, 'music', p.music);
+  fillChipGroupWithOther(prefix, 'activities', p.activities);
   document.getElementById(prefix+'-zodiac').value = p.zodiac || '';
   document.getElementById(prefix+'-bio').value = p.bio || '';
 }
@@ -499,6 +538,10 @@ function clearPersonForm(prefix){
   document.getElementById(prefix+'-height').value = '';
   document.getElementById(prefix+'-zodiac').value = '';
   document.querySelectorAll(`input[data-name^="${prefix}-"]`).forEach(i=>{ i.checked=false; if(i.closest('.chip')) i.closest('.chip').classList.remove('checked'); });
+  ['interests','vibes','dateTypes','music','activities'].forEach(g => {
+    const el = document.getElementById(`${prefix}-${g}-other`);
+    if(el){ el.value=''; el.style.display='none'; }
+  });
   document.getElementById(prefix+'-bio').value = '';
 }
 
@@ -566,8 +609,8 @@ function renderRoster(){
       <td>${IDENTITY_LABEL[p.identity]||'—'}</td>
       <td>${p.lookingFor.map(l=>IDENTITY_LABEL[l==='guys'?'guy':'girl']).join(', ')}</td>
       <td>${formatHeight(p.heightIn)}</td>
-      <td>${p.interests.map(t=>`<span class="tag-mini">${EMOJI.interests[t]||''} ${t}</span>`).join('')}</td>
-      <td>${p.vibes.map(t=>`<span class="tag-mini">${EMOJI.vibes[t]||''} ${t}</span>`).join('')}</td>
+      <td>${p.interests.map(t=>`<span class="tag-mini">${tagEmoji('interests',t)} ${t}</span>`).join('')}</td>
+      <td>${p.vibes.map(t=>`<span class="tag-mini">${tagEmoji('vibes',t)} ${t}</span>`).join('')}</td>
       <td class="roster-actions">
         <button class="btn ghost" data-edit="${p.id}">Edit</button>
         <button class="btn danger" data-del="${p.id}">Delete</button>
@@ -804,7 +847,7 @@ document.getElementById('gen-matches').addEventListener('click', () => {
 function sharedSummary(shared){
   const bits = [];
   ['interests','vibes','dateTypes','music','activities'].forEach(k => {
-    (shared[k]||[]).forEach(t => bits.push(`${EMOJI[k][t]||''} ${t}`));
+    (shared[k]||[]).forEach(t => bits.push(`${tagEmoji(k,t)} ${t}`));
   });
   if(shared.sameGrade) bits.push('🎓 same grade');
   if(shared.heightCompat==='mutual') bits.push('📏 height match');
@@ -938,11 +981,11 @@ function renderSwipeCard(){
       <span class="tag-mini">🎓 ${GRADE_LABEL[target.grade]||'—'}</span>
       <span class="tag-mini">📏 ${formatHeight(target.heightIn)}</span>
       ${target.zodiac ? `<span class="tag-mini">${ZODIAC_EMOJI[target.zodiac]||''} ${target.zodiac}</span>` : ''}
-      ${target.interests.map(t=>`<span class="tag-mini">${EMOJI.interests[t]||''} ${t}</span>`).join('')}
-      ${target.vibes.map(t=>`<span class="tag-mini">${EMOJI.vibes[t]||''} ${t}</span>`).join('')}
-      ${target.dateTypes.map(t=>`<span class="tag-mini">${EMOJI.dateTypes[t]||''} ${t}</span>`).join('')}
-      ${target.music.map(t=>`<span class="tag-mini">${EMOJI.music[t]||''} ${t}</span>`).join('')}
-      ${(target.activities||[]).map(t=>`<span class="tag-mini">${EMOJI.activities[t]||''} ${t}</span>`).join('')}
+      ${target.interests.map(t=>`<span class="tag-mini">${tagEmoji('interests',t)} ${t}</span>`).join('')}
+      ${target.vibes.map(t=>`<span class="tag-mini">${tagEmoji('vibes',t)} ${t}</span>`).join('')}
+      ${target.dateTypes.map(t=>`<span class="tag-mini">${tagEmoji('dateTypes',t)} ${t}</span>`).join('')}
+      ${target.music.map(t=>`<span class="tag-mini">${tagEmoji('music',t)} ${t}</span>`).join('')}
+      ${(target.activities||[]).map(t=>`<span class="tag-mini">${tagEmoji('activities',t)} ${t}</span>`).join('')}
       <div class="swipe-bio">"${escapeHtml(target.bio) || 'No mystery clue given…'}"</div>
       <div class="swipe-actions">
         <button class="swipe-pass" data-swipe="pass" data-target="${target.id}" title="Pass">✖</button>
