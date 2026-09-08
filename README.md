@@ -13,13 +13,13 @@ no build step, no server. Data lives entirely in the browser's `localStorage`.
   form, with Back/Next navigation and a step counter. Covers: guy/girl
   identity + who they're interested in, grade + which grades they're open
   to, height (5'0" up to a 6'5"+ bucket) + optional height preference,
-  interests, vibe, dream date, music, school activities/clubs, optional
-  zodiac sign, a **Personality & Values** step (social battery, texting
-  style, love language, what matters most on a date — all of which factor
-  into the match score, not just decoration), and an optional "mystery
-  clue" bio. Every chip category has an "Other" option that reveals a text
-  field for something specific — a favorite song, a custom date idea —
-  shown with a ⭐ wherever traits are displayed.
+  interests, vibe, dream date, music, school activities/clubs, a
+  **Personality & Values** step (social battery, texting style, love
+  language, what matters most on a date), and an optional "mystery clue"
+  bio. Every field here feeds the match score — nothing is purely
+  decorative. Every chip category has an "Other" option that reveals a
+  text field for something specific — a favorite song, a custom date idea
+  — shown with a ⭐ wherever traits are displayed.
 - **Swipe** — Tinder-style mode: students swipe yes/no on anonymized mystery
   profiles; a couple only forms if both sides swiped yes on each other.
 - **Owner Panel** (passcode-gated, classroom-level gate only) — roster
@@ -27,6 +27,26 @@ no build step, no server. Data lives entirely in the browser's `localStorage`.
   in specific couples, choosing between the two matching modes, and CSV export.
 - **Mystery Reveal** — shows each couple's bio clue first, then flips to reveal
   names and shared traits, with prev/next controls for presenting to a class.
+
+## Matching algorithm
+
+Every eligible pair is scored on **normalized similarity** per category
+(shared count divided by the smaller person's pick count, so a category
+with a long checkbox list never outscores a smaller one just by chance),
+plus bonuses for matching grade, a mutually-satisfied height preference,
+and matching social style/texting style/love language. Locked-in couples
+(the owner's manual picks) always take priority and are never touched by
+the rest of this.
+
+Rather than stopping at a greedy pass (highest-scoring pair first, repeat),
+which is only ever an approximation and can lock in a bad global result to
+grab one great pair, the matcher runs a **local-search refinement** on top:
+it repeatedly looks for any swap between two couples (or between a leftover
+single and one half of a couple) that raises total compatibility, and takes
+it, until a full pass finds no more improving swap. This reliably finds a
+much better overall pairing than plain greedy — verified with a
+constructed worst-case scenario where greedy's single best pair blocked two
+good pairs; the refinement pass found and fixed it.
 
 ## Deploying
 

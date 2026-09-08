@@ -208,8 +208,8 @@
     <div class="card">
       <h3 style="margin-top:0">Bulk import ("scan the stack in")</h3>
       <p class="muted">Paste one islander per line, fields separated by <code>|</code>. Great for quickly transcribing a stack of scanned/paper forms at once.</p>
-      <code class="tmpl">Name | Identity(guy/girl) | Open to(guys,girls) | Grade(9/10/11/12) | Open to grades(comma list of 9,10,11,12) | Height(5'0" to 6'4", or 6'5"+ for taller) | Height pref(comma: Taller than me,Shorter than me,About the same height,No preference) | Interests(comma list, any text works) | Vibe words(comma list, any text works) | Date ideas(comma list, any text works) | Music(comma list, any text works) | Activities/clubs(comma list, any text works) | Zodiac(optional) | Social style(Life of the party/Balanced/Homebody, optional) | Texting style(Big texter/Prefers calling/Better in person, optional) | Love language(Words of Affirmation/Quality Time/Acts of Service/Gifts/Physical Touch, optional) | What matters most(comma list, up to 2, any text works, optional) | Mystery clue(optional)
-Jordan Lee | girl | guys | 11 | 10,11,12 | 5'6" | About the same height | Music,Gaming,Homemade Ramen | Funny | Movie Night,Stargazing on the roof | Rihanna - Diamonds | Band/Choir/Orchestra,Honor Society | Leo | Balanced | Big texter | Quality Time | Good conversation,Good energy | Once tried to teach a cat to skateboard.</code>
+      <code class="tmpl">Name | Identity(guy/girl) | Open to(guys,girls) | Grade(9/10/11/12) | Open to grades(comma list of 9,10,11,12) | Height(5'0" to 6'4", or 6'5"+ for taller) | Height pref(comma: Taller than me,Shorter than me,About the same height,No preference) | Interests(comma list, any text works) | Vibe words(comma list, any text works) | Date ideas(comma list, any text works) | Music(comma list, any text works) | Activities/clubs(comma list, any text works) | Social style(Life of the party/Balanced/Homebody, optional) | Texting style(Big texter/Prefers calling/Better in person, optional) | Love language(Words of Affirmation/Quality Time/Acts of Service/Gifts/Physical Touch, optional) | What matters most(comma list, up to 2, any text works, optional) | Mystery clue(optional)
+Jordan Lee | girl | guys | 11 | 10,11,12 | 5'6" | About the same height | Music,Gaming,Homemade Ramen | Funny | Movie Night,Stargazing on the roof | Rihanna - Diamonds | Band/Choir/Orchestra,Honor Society | Balanced | Big texter | Quality Time | Good conversation,Good energy | Once tried to teach a cat to skateboard.</code>
       <label class="field"><span>Paste rows here</span><textarea id="bulk-input" rows="6" placeholder="Paste scanned/transcribed rows here…"></textarea></label>
       <div class="row"><button class="btn" id="bulk-submit">Import rows</button></div>
       <div id="bulk-banner"></div>
@@ -311,17 +311,17 @@ const HEIGHT_PREF = ['Taller than me','Shorter than me','About the same height',
 const HEIGHT_OPTIONS = [];
 for(let inches=60; inches<=76; inches++){ HEIGHT_OPTIONS.push({ value: inches, label: `${Math.floor(inches/12)}'${inches%12}"` }); }
 HEIGHT_OPTIONS.push({ value: 77, label: `6'5"+` });
-const ZODIAC = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
-const ZODIAC_EMOJI = {'Aries':'♈','Taurus':'♉','Gemini':'♊','Cancer':'♋','Leo':'♌','Virgo':'♍','Libra':'♎','Scorpio':'♏','Sagittarius':'♐','Capricorn':'♑','Aquarius':'♒','Pisces':'♓'};
 const SOCIAL_STYLE = ['Life of the party','Balanced','Homebody'];
 const SOCIAL_STYLE_EMOJI = {'Life of the party':'🎉','Balanced':'⚖️','Homebody':'🛋️'};
 const COMM_STYLE = ['Big texter','Prefers calling','Better in person'];
 const COMM_STYLE_EMOJI = {'Big texter':'📱','Prefers calling':'📞','Better in person':'🧑‍🤝‍🧑'};
 const LOVE_LANGUAGE = ['Words of Affirmation','Quality Time','Acts of Service','Gifts','Physical Touch'];
 const LOVE_LANGUAGE_EMOJI = {'Words of Affirmation':'💬','Quality Time':'⏳','Acts of Service':'🛠️','Gifts':'🎁','Physical Touch':'🤗'};
-const WEIGHTS = {interests:3, vibes:2.5, dateTypes:2, music:1.5, activities:2.5, whatMatters:2.5};
-const HEIGHT_BONUS = {mutual:2.5, partial:1};
-const PERSONALITY_BONUS = {social:1.5, comm:1, loveLanguage:1.5};
+// Category weights apply to a 0-1 overlap-coefficient similarity (see similarity()),
+// so a category with more checkbox options never scores higher just by chance.
+const WEIGHTS = {interests:3, vibes:2.5, dateTypes:2, music:1.5, activities:2, whatMatters:2.5, sameGrade:1};
+const HEIGHT_BONUS = {mutual:2, partial:0.8};
+const PERSONALITY_BONUS = {social:1.2, comm:0.8, loveLanguage:1.2};
 
 function uid(){ return 'p_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
@@ -466,12 +466,6 @@ function personFormHTML(prefix){
       <label class="field"><span>Your vibe</span>${chipGroup(prefix,'vibes',3)}</label>
       <label class="field"><span>Dream date</span>${chipGroup(prefix,'dateTypes',3)}</label>
       <label class="field"><span>Music</span>${chipGroup(prefix,'music')}</label>
-      <label class="field"><span>Zodiac (optional)</span>
-        <select id="${prefix}-zodiac">
-          <option value="">Prefer not to say</option>
-          ${ZODIAC.map(z => `<option value="${z}">${ZODIAC_EMOJI[z]} ${z}</option>`).join('')}
-        </select>
-      </label>
       ${stepNav(4)}
     </div>
     <div class="step" data-step="5">
@@ -589,7 +583,6 @@ function readPersonForm(prefix){
   const dateTypes = resolveOther(prefix,'dateTypes', [...document.querySelectorAll(`input[data-name="${prefix}-dateTypes"]:checked`)].map(i=>i.value));
   const music = resolveOther(prefix,'music', [...document.querySelectorAll(`input[data-name="${prefix}-music"]:checked`)].map(i=>i.value));
   const activities = resolveOther(prefix,'activities', [...document.querySelectorAll(`input[data-name="${prefix}-activities"]:checked`)].map(i=>i.value));
-  const zodiac = document.getElementById(prefix+'-zodiac').value;
   const socialEl = document.querySelector(`input[name="${prefix}-social"]:checked`);
   const social = socialEl ? socialEl.value : null;
   const commEl = document.querySelector(`input[name="${prefix}-comm"]:checked`);
@@ -598,7 +591,7 @@ function readPersonForm(prefix){
   const loveLanguage = loveLangEl ? loveLangEl.value : null;
   const whatMatters = resolveOther(prefix,'whatMatters', [...document.querySelectorAll(`input[data-name="${prefix}-whatMatters"]:checked`)].map(i=>i.value));
   const bio = (document.getElementById(prefix+'-bio').value || '').trim();
-  return { name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, zodiac, social, comm, loveLanguage, whatMatters, bio };
+  return { name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, social, comm, loveLanguage, whatMatters, bio };
 }
 function validatePerson(p){
   if(!p.name) return 'Please enter a name.';
@@ -625,7 +618,6 @@ function fillPersonForm(prefix, p){
   fillChipGroupWithOther(prefix, 'dateTypes', p.dateTypes);
   fillChipGroupWithOther(prefix, 'music', p.music);
   fillChipGroupWithOther(prefix, 'activities', p.activities);
-  document.getElementById(prefix+'-zodiac').value = p.zodiac || '';
   const socialEl = document.querySelector(`input[name="${prefix}-social"][value="${p.social}"]`);
   if(socialEl) socialEl.checked = true;
   const commEl = document.querySelector(`input[name="${prefix}-comm"][value="${p.comm}"]`);
@@ -643,7 +635,6 @@ function clearPersonForm(prefix){
   document.querySelectorAll(`input[name="${prefix}-comm"]`).forEach(i=>i.checked=false);
   document.querySelectorAll(`input[name="${prefix}-lovelang"]`).forEach(i=>i.checked=false);
   document.getElementById(prefix+'-height').value = '';
-  document.getElementById(prefix+'-zodiac').value = '';
   document.querySelectorAll(`input[data-name^="${prefix}-"]`).forEach(i=>{ i.checked=false; if(i.closest('.chip')) i.closest('.chip').classList.remove('checked'); });
   ['interests','vibes','dateTypes','music','activities','whatMatters'].forEach(g => {
     const el = document.getElementById(`${prefix}-${g}-other`);
@@ -774,8 +765,8 @@ document.getElementById('bulk-submit').addEventListener('click', () => {
   let added = 0; const problems = [];
   lines.forEach((line, i) => {
     const parts = line.split('|').map(s=>s.trim());
-    if(parts.length < 17){ problems.push(`Line ${i+1}: expected 17-18 fields, got ${parts.length}.`); return; }
-    const [name, identityRaw, lookingRaw, gradeRaw, gradeOpenRaw, heightRaw, heightPrefRaw, interestsRaw, vibesRaw, dateRaw, musicRaw, activitiesRaw, zodiacRaw, socialRaw, commRaw, loveLangRaw, whatMattersRaw, bio] = parts;
+    if(parts.length < 16){ problems.push(`Line ${i+1}: expected 16-17 fields, got ${parts.length}.`); return; }
+    const [name, identityRaw, lookingRaw, gradeRaw, gradeOpenRaw, heightRaw, heightPrefRaw, interestsRaw, vibesRaw, dateRaw, musicRaw, activitiesRaw, socialRaw, commRaw, loveLangRaw, whatMattersRaw, bio] = parts;
     if(!name){ problems.push(`Line ${i+1}: missing name.`); return; }
     const identityLower = identityRaw.toLowerCase();
     if(!['guy','girl'].includes(identityLower)) problems.push(`Line ${i+1} (${name}): identity "${identityRaw}" not recognized (use guy or girl), defaulted to guy.`);
@@ -796,13 +787,12 @@ document.getElementById('bulk-submit').addEventListener('click', () => {
     const dateTypes = normalizeTagList(dateRaw, TAGS.dateTypes).slice(0,3);
     const music = normalizeTagList(musicRaw, TAGS.music);
     const activities = normalizeTagList(activitiesRaw, TAGS.activities);
-    const zodiac = ZODIAC.find(z => z.toLowerCase() === (zodiacRaw||'').trim().toLowerCase()) || '';
     const social = SOCIAL_STYLE.find(s => s.toLowerCase() === (socialRaw||'').trim().toLowerCase()) || null;
     const comm = COMM_STYLE.find(s => s.toLowerCase() === (commRaw||'').trim().toLowerCase()) || null;
     const loveLanguage = LOVE_LANGUAGE.find(s => s.toLowerCase() === (loveLangRaw||'').trim().toLowerCase()) || null;
     const whatMatters = normalizeTagList(whatMattersRaw, TAGS.whatMatters).slice(0,2);
     if(!interests.length){ problems.push(`Line ${i+1} (${name}): no interests found.`); }
-    state.islanders.push({ id: uid(), name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, zodiac, social, comm, loveLanguage, whatMatters, bio: (bio||'').trim(), source:'owner-bulk', createdAt: Date.now() });
+    state.islanders.push({ id: uid(), name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, social, comm, loveLanguage, whatMatters, bio: (bio||'').trim(), source:'owner-bulk', createdAt: Date.now() });
     added++;
   });
   save(); renderOwner();
@@ -851,6 +841,12 @@ function eligible(a,b){
   return true;
 }
 function overlap(a,b){ return a.filter(x => b.includes(x)); }
+function similarity(a,b){
+  a = a||[]; b = b||[];
+  const smaller = Math.min(a.length, b.length);
+  if(smaller===0) return 0;
+  return overlap(a,b).length / smaller; // overlap coefficient, 0..1 regardless of how many boxes someone checked
+}
 function heightPrefSatisfied(prefs, selfIn, otherIn){
   if(!prefs || !prefs.length || selfIn==null || otherIn==null) return true;
   return prefs.some(pref => {
@@ -882,9 +878,13 @@ function computeScore(a,b){
     sameComm: !!(a.comm && b.comm && a.comm===b.comm),
     sameLoveLanguage: !!(a.loveLanguage && b.loveLanguage && a.loveLanguage===b.loveLanguage)
   };
-  let score = shared.interests.length*WEIGHTS.interests + shared.vibes.length*WEIGHTS.vibes +
-    shared.dateTypes.length*WEIGHTS.dateTypes + shared.music.length*WEIGHTS.music +
-    shared.activities.length*WEIGHTS.activities + shared.whatMatters.length*WEIGHTS.whatMatters;
+  let score = similarity(a.interests,b.interests)*WEIGHTS.interests
+    + similarity(a.vibes,b.vibes)*WEIGHTS.vibes
+    + similarity(a.dateTypes,b.dateTypes)*WEIGHTS.dateTypes
+    + similarity(a.music,b.music)*WEIGHTS.music
+    + similarity(a.activities,b.activities)*WEIGHTS.activities
+    + similarity(a.whatMatters,b.whatMatters)*WEIGHTS.whatMatters;
+  if(shared.sameGrade) score += WEIGHTS.sameGrade;
   if(shared.heightCompat==='mutual') score += HEIGHT_BONUS.mutual;
   else if(shared.heightCompat==='partial') score += HEIGHT_BONUS.partial;
   if(shared.sameSocial) score += PERSONALITY_BONUS.social;
@@ -901,7 +901,7 @@ function lockedResults(){
 }
 function greedyPair(pool, candidates, mode){
   const results = lockedResults();
-  candidates.sort((x,y) => y.score - x.score);
+  candidates.sort((x,y) => y.sortKey - x.sortKey);
   const matched = new Set();
   candidates.forEach(c => {
     if(matched.has(c.a.id) || matched.has(c.b.id)) return;
@@ -909,6 +909,77 @@ function greedyPair(pool, candidates, mode){
     results.push({ a:c.a, b:c.b, shared:c.shared, mode });
   });
   const leftover = pool.filter(p => !matched.has(p.id));
+  return { results, leftover };
+}
+// canPair: is this a legal pairing under the current matching mode? (score mode: just
+// eligibility; swipe mode: eligibility AND both people swiped yes on each other)
+function canPair(mode, a, b){
+  if(!eligible(a,b)) return false;
+  if(mode==='swipe'){
+    const aLikesB = state.swipes[a.id] && state.swipes[a.id][b.id] === true;
+    const bLikesA = state.swipes[b.id] && state.swipes[b.id][a.id] === true;
+    if(!aLikesB || !bLikesA) return false;
+  }
+  return true;
+}
+// Greedy pairing (by score, highest first) is only ever an approximation of the best
+// possible set of couples. This runs a local-search pass on top of it: repeatedly look
+// for any swap between two couples, or between a leftover single and one half of a
+// couple, that raises total compatibility, and take it. Repeats until a full pass finds
+// no more improving swap (or maxPasses safety cap), which is a standard and effective
+// way to get near-optimal pairings without the complexity of a full matching algorithm.
+function localSearchImprove(results, leftover, mode, maxPasses){
+  maxPasses = maxPasses || 25;
+  const pairScore = (x,y) => computeScore(x,y).score;
+  for(let pass=0; pass<maxPasses; pass++){
+    let improved = false;
+    for(let i=0;i<results.length;i++){
+      if(results[i].mode==='locked') continue;
+      for(let j=i+1;j<results.length;j++){
+        if(results[j].mode==='locked') continue;
+        const c1 = results[i], c2 = results[j];
+        const current = pairScore(c1.a,c1.b) + pairScore(c2.a,c2.b);
+        if(canPair(mode,c1.a,c2.a) && canPair(mode,c1.b,c2.b)){
+          const alt = pairScore(c1.a,c2.a) + pairScore(c1.b,c2.b);
+          if(alt > current + 1e-9){
+            results[i] = { a:c1.a, b:c2.a, shared:computeScore(c1.a,c2.a).shared, mode:c1.mode };
+            results[j] = { a:c1.b, b:c2.b, shared:computeScore(c1.b,c2.b).shared, mode:c2.mode };
+            improved = true; continue;
+          }
+        }
+        if(canPair(mode,c1.a,c2.b) && canPair(mode,c1.b,c2.a)){
+          const alt = pairScore(c1.a,c2.b) + pairScore(c1.b,c2.a);
+          if(alt > current + 1e-9){
+            results[i] = { a:c1.a, b:c2.b, shared:computeScore(c1.a,c2.b).shared, mode:c1.mode };
+            results[j] = { a:c1.b, b:c2.a, shared:computeScore(c1.b,c2.a).shared, mode:c2.mode };
+            improved = true;
+          }
+        }
+      }
+    }
+    for(let li=0; li<leftover.length; li++){
+      const single = leftover[li];
+      let bestGain = 1e-9, bestIdx = -1, bestKeep = null, bestDisplaced = null;
+      for(let i=0;i<results.length;i++){
+        const c = results[i];
+        if(c.mode==='locked') continue;
+        if(canPair(mode,single,c.b)){
+          const gain = pairScore(single,c.b) - pairScore(c.a,c.b);
+          if(gain > bestGain){ bestGain=gain; bestIdx=i; bestKeep=c.b; bestDisplaced=c.a; }
+        }
+        if(canPair(mode,single,c.a)){
+          const gain = pairScore(single,c.a) - pairScore(c.a,c.b);
+          if(gain > bestGain){ bestGain=gain; bestIdx=i; bestKeep=c.a; bestDisplaced=c.b; }
+        }
+      }
+      if(bestIdx>-1){
+        results[bestIdx] = { a:bestKeep, b:single, shared:computeScore(bestKeep,single).shared, mode:results[bestIdx].mode };
+        leftover[li] = bestDisplaced;
+        improved = true;
+      }
+    }
+    if(!improved) break;
+  }
   return { results, leftover };
 }
 function generateMatchesScoreMode(){
@@ -920,22 +991,20 @@ function generateMatchesScoreMode(){
       const a = pool[i], b = pool[j];
       if(!eligible(a,b)) continue;
       const { score, shared } = computeScore(a,b);
-      candidates.push({ a, b, shared, score: score + Math.random()*0.75 });
+      candidates.push({ a, b, shared, sortKey: score + Math.random()*0.75 });
     }
   }
-  return greedyPair(pool, candidates, 'score');
+  const { results, leftover } = greedyPair(pool, candidates, 'score');
+  return localSearchImprove(results, leftover, 'score');
 }
 function mutualPairs(pool){
   const candidates = [];
   for(let i=0;i<pool.length;i++){
     for(let j=i+1;j<pool.length;j++){
       const a = pool[i], b = pool[j];
-      if(!eligible(a,b)) continue;
-      const aLikesB = state.swipes[a.id] && state.swipes[a.id][b.id] === true;
-      const bLikesA = state.swipes[b.id] && state.swipes[b.id][a.id] === true;
-      if(!aLikesB || !bLikesA) continue;
+      if(!canPair('swipe',a,b)) continue;
       const { score, shared } = computeScore(a,b);
-      candidates.push({ a, b, shared, score: score + Math.random()*0.75 });
+      candidates.push({ a, b, shared, sortKey: score + Math.random()*0.75 });
     }
   }
   return candidates;
@@ -943,7 +1012,8 @@ function mutualPairs(pool){
 function generateMatchesSwipeMode(){
   const lockedIds = new Set(state.lockedPairs.flat());
   const pool = state.islanders.filter(p => !lockedIds.has(p.id));
-  return greedyPair(pool, mutualPairs(pool), 'swipe');
+  const { results, leftover } = greedyPair(pool, mutualPairs(pool), 'swipe');
+  return localSearchImprove(results, leftover, 'swipe');
 }
 function generateMatches(){
   return state.matchMode === 'swipe' ? generateMatchesSwipeMode() : generateMatchesScoreMode();
@@ -1014,12 +1084,12 @@ function downloadCSV(filename, rows){
   URL.revokeObjectURL(url);
 }
 document.getElementById('export-roster').addEventListener('click', () => {
-  const rows = [['Name','Grade','Open to grades','Identity','Open to','Height','Height Preference','Interests','Vibe','Date Ideas','Music','Activities/Clubs','Zodiac','Social Style','Texting Style','Love Language','What Matters Most','Mystery Clue']];
+  const rows = [['Name','Grade','Open to grades','Identity','Open to','Height','Height Preference','Interests','Vibe','Date Ideas','Music','Activities/Clubs','Social Style','Texting Style','Love Language','What Matters Most','Mystery Clue']];
   state.islanders.forEach(p => rows.push([
     p.name, GRADE_LABEL[p.grade]||'', (p.gradeOpenTo||[]).map(g=>GRADE_LABEL[g]).join(', '),
     IDENTITY_LABEL[p.identity], p.lookingFor.join(', '), formatHeight(p.heightIn), (p.heightPref||[]).join(', '),
     p.interests.join(', '), p.vibes.join(', '), p.dateTypes.join(', '), p.music.join(', '),
-    (p.activities||[]).join(', '), p.zodiac||'', p.social||'', p.comm||'', p.loveLanguage||'', (p.whatMatters||[]).join(', '), p.bio
+    (p.activities||[]).join(', '), p.social||'', p.comm||'', p.loveLanguage||'', (p.whatMatters||[]).join(', '), p.bio
   ]));
   downloadCSV('villa-roster.csv', rows);
 });
@@ -1105,7 +1175,6 @@ function renderSwipeCard(){
       <h4>🕵️ Mystery Islander</h4>
       <span class="tag-mini">🎓 ${GRADE_LABEL[target.grade]||'—'}</span>
       <span class="tag-mini">📏 ${formatHeight(target.heightIn)}</span>
-      ${target.zodiac ? `<span class="tag-mini">${ZODIAC_EMOJI[target.zodiac]||''} ${target.zodiac}</span>` : ''}
       ${target.interests.map(t=>`<span class="tag-mini">${tagEmoji('interests',t)} ${t}</span>`).join('')}
       ${target.vibes.map(t=>`<span class="tag-mini">${tagEmoji('vibes',t)} ${t}</span>`).join('')}
       ${target.dateTypes.map(t=>`<span class="tag-mini">${tagEmoji('dateTypes',t)} ${t}</span>`).join('')}
