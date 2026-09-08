@@ -18,11 +18,13 @@
   *{box-sizing:border-box}
   body{
     margin:0; min-height:100vh; color:var(--ink);
-    background:linear-gradient(180deg, var(--night), var(--night2));
-    background-attachment:fixed;
+    background:#0b0b0b;
   }
   a{color:var(--pink-soft)}
-  .wrap{max-width:980px; margin:0 auto; padding:20px 16px 80px}
+  .wrap{
+    max-width:980px; margin:0 auto; padding:20px 16px 80px; min-height:100vh;
+    background:linear-gradient(180deg, var(--night), var(--night2));
+  }
   header.top{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:18px 16px}
   .brand{display:flex; align-items:center; gap:10px; font-weight:800; font-size:1.25rem; letter-spacing:.2px}
   .brand .heart{width:38px; height:38px; filter:drop-shadow(0 2px 4px rgba(32,24,13,.25))}
@@ -103,6 +105,12 @@
   .swipe-pass{background:rgba(194,59,42,.16); border:2px solid var(--bad) !important; color:var(--bad)}
   .swipe-like{background:rgba(47,143,62,.16); border:2px solid var(--good) !important; color:var(--good)}
   .swipe-progress{text-align:center; color:var(--ink-dim); font-size:.8rem; margin-top:12px}
+  .step{display:none}
+  .step.active{display:block; animation:stepIn .2s ease}
+  @keyframes stepIn{from{opacity:0; transform:translateX(6px)} to{opacity:1; transform:translateX(0)}}
+  .wizard-progress{font-size:.72rem; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.8px; font-weight:700; margin-bottom:14px}
+  .wizard-nav{margin-top:20px; padding-top:16px; border-top:1px solid var(--card-border)}
+  .step h4{margin:0 0 12px; font-size:1.05rem; color:var(--pink-soft)}
   .mode-choice{display:flex; flex-direction:column; gap:10px; margin-top:8px}
   .mode-choice label{display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border:1px solid var(--card-border); border-radius:12px; cursor:pointer}
   .mode-choice input{margin-top:3px}
@@ -200,8 +208,8 @@
     <div class="card">
       <h3 style="margin-top:0">Bulk import ("scan the stack in")</h3>
       <p class="muted">Paste one islander per line, fields separated by <code>|</code>. Great for quickly transcribing a stack of scanned/paper forms at once.</p>
-      <code class="tmpl">Name | Identity(guy/girl) | Open to(guys,girls) | Grade(9/10/11/12) | Open to grades(comma list of 9,10,11,12) | Height(5'0" to 6'4", or 6'5"+ for taller) | Height pref(comma: Taller than me,Shorter than me,About the same height,No preference) | Interests(comma list, any text works) | Vibe words(comma list, any text works) | Date ideas(comma list, any text works) | Music(comma list, any text works) | Activities/clubs(comma list, any text works) | Zodiac(optional) | Mystery clue(optional)
-Jordan Lee | girl | guys | 11 | 10,11,12 | 5'6" | About the same height | Music,Gaming,Homemade Ramen | Funny | Movie Night,Stargazing on the roof | Rihanna - Diamonds | Band/Choir/Orchestra,Honor Society | Leo | Once tried to teach a cat to skateboard.</code>
+      <code class="tmpl">Name | Identity(guy/girl) | Open to(guys,girls) | Grade(9/10/11/12) | Open to grades(comma list of 9,10,11,12) | Height(5'0" to 6'4", or 6'5"+ for taller) | Height pref(comma: Taller than me,Shorter than me,About the same height,No preference) | Interests(comma list, any text works) | Vibe words(comma list, any text works) | Date ideas(comma list, any text works) | Music(comma list, any text works) | Activities/clubs(comma list, any text works) | Zodiac(optional) | Social style(Life of the party/Balanced/Homebody, optional) | Texting style(Big texter/Prefers calling/Better in person, optional) | Love language(Words of Affirmation/Quality Time/Acts of Service/Gifts/Physical Touch, optional) | What matters most(comma list, up to 2, any text works, optional) | Mystery clue(optional)
+Jordan Lee | girl | guys | 11 | 10,11,12 | 5'6" | About the same height | Music,Gaming,Homemade Ramen | Funny | Movie Night,Stargazing on the roof | Rihanna - Diamonds | Band/Choir/Orchestra,Honor Society | Leo | Balanced | Big texter | Quality Time | Good conversation,Good energy | Once tried to teach a cat to skateboard.</code>
       <label class="field"><span>Paste rows here</span><textarea id="bulk-input" rows="6" placeholder="Paste scanned/transcribed rows here…"></textarea></label>
       <div class="row"><button class="btn" id="bulk-submit">Import rows</button></div>
       <div id="bulk-banner"></div>
@@ -285,14 +293,16 @@ const TAGS = {
   vibes: ['Funny','Chill','Adventurous','Romantic','Mysterious','Sweet','Confident'],
   dateTypes: ['Fancy Dinner','Arcade/Games','Movie Night','Outdoor Adventure','Chill Hangout','Dancing'],
   music: ['Pop','Hip-Hop/Rap','Country','Rock','EDM/Dance','R&B/Soul'],
-  activities: ['Varsity/JV Sports','Band/Choir/Orchestra','Drama/Theater','Student Government','Honor Society','FFA/4-H','Art Club','Part-time Job']
+  activities: ['Varsity/JV Sports','Band/Choir/Orchestra','Drama/Theater','Student Government','Honor Society','FFA/4-H','Art Club','Part-time Job'],
+  whatMatters: ['Good conversation','No pressure, just fun','Someone who puts in effort','Shared interests','Good energy']
 };
 const EMOJI = {
   interests:{'Sports':'⚽','Music':'🎵','Gaming':'🎮','Art':'🎨','Movies & TV':'🎬','Outdoors':'🌲','Cooking':'🍳','Reading':'📚','Fashion':'👗','Fitness':'🏋️','Dance':'💃','Tech':'💻'},
   vibes:{'Funny':'😂','Chill':'😌','Adventurous':'🧗','Romantic':'🌹','Mysterious':'🕵️','Sweet':'🍯','Confident':'😎'},
   dateTypes:{'Fancy Dinner':'🍽️','Arcade/Games':'🕹️','Movie Night':'🎥','Outdoor Adventure':'🏕️','Chill Hangout':'🛋️','Dancing':'💃'},
   music:{'Pop':'🎤','Hip-Hop/Rap':'🎧','Country':'🤠','Rock':'🎸','EDM/Dance':'🪩','R&B/Soul':'🎶'},
-  activities:{'Varsity/JV Sports':'🏅','Band/Choir/Orchestra':'🎺','Drama/Theater':'🎭','Student Government':'🏛️','Honor Society':'🎓','FFA/4-H':'🌾','Art Club':'🖌️','Part-time Job':'💼'}
+  activities:{'Varsity/JV Sports':'🏅','Band/Choir/Orchestra':'🎺','Drama/Theater':'🎭','Student Government':'🏛️','Honor Society':'🎓','FFA/4-H':'🌾','Art Club':'🖌️','Part-time Job':'💼'},
+  whatMatters:{'Good conversation':'💬','No pressure, just fun':'😌','Someone who puts in effort':'🌹','Shared interests':'🤝','Good energy':'✨'}
 };
 const IDENTITY_LABEL = {guy:'Guy', girl:'Girl'};
 const GRADES = ['9','10','11','12'];
@@ -303,8 +313,15 @@ for(let inches=60; inches<=76; inches++){ HEIGHT_OPTIONS.push({ value: inches, l
 HEIGHT_OPTIONS.push({ value: 77, label: `6'5"+` });
 const ZODIAC = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
 const ZODIAC_EMOJI = {'Aries':'♈','Taurus':'♉','Gemini':'♊','Cancer':'♋','Leo':'♌','Virgo':'♍','Libra':'♎','Scorpio':'♏','Sagittarius':'♐','Capricorn':'♑','Aquarius':'♒','Pisces':'♓'};
-const WEIGHTS = {interests:3, vibes:2.5, dateTypes:2, music:1.5, activities:2.5};
+const SOCIAL_STYLE = ['Life of the party','Balanced','Homebody'];
+const SOCIAL_STYLE_EMOJI = {'Life of the party':'🎉','Balanced':'⚖️','Homebody':'🛋️'};
+const COMM_STYLE = ['Big texter','Prefers calling','Better in person'];
+const COMM_STYLE_EMOJI = {'Big texter':'📱','Prefers calling':'📞','Better in person':'🧑‍🤝‍🧑'};
+const LOVE_LANGUAGE = ['Words of Affirmation','Quality Time','Acts of Service','Gifts','Physical Touch'];
+const LOVE_LANGUAGE_EMOJI = {'Words of Affirmation':'💬','Quality Time':'⏳','Acts of Service':'🛠️','Gifts':'🎁','Physical Touch':'🤗'};
+const WEIGHTS = {interests:3, vibes:2.5, dateTypes:2, music:1.5, activities:2.5, whatMatters:2.5};
 const HEIGHT_BONUS = {mutual:2.5, partial:1};
+const PERSONALITY_BONUS = {social:1.5, comm:1, loveLanguage:1.5};
 
 function uid(){ return 'p_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
@@ -372,7 +389,7 @@ document.getElementById('owner-change-pass').addEventListener('click', () => {
 const OTHER_PLACEHOLDER = {
   interests: 'Type your own interest…', vibes: 'Type your own word…',
   dateTypes: 'Describe your dream date…', music: 'Your favorite song or artist…',
-  activities: 'Type your own activity/club…'
+  activities: 'Type your own activity/club…', whatMatters: 'Type your own…'
 };
 function tagEmoji(groupKey, t){ return (EMOJI[groupKey] && EMOJI[groupKey][t]) ? EMOJI[groupKey][t] : '⭐'; }
 function chipGroup(prefix, groupKey, max){
@@ -386,56 +403,105 @@ function chipGroup(prefix, groupKey, max){
     `<input type="text" id="${otherId}" class="other-input" style="display:none; margin-top:6px" maxlength="60" placeholder="${OTHER_PLACEHOLDER[groupKey]||'Type your own…'}" />` +
     (max ? `<div class="hint">Choose up to ${max} (Other counts as one).</div>` : '');
 }
+const WIZARD_STEPS = 6;
+function stepNav(idx){
+  return `<div class="row wizard-nav" style="justify-content:space-between">
+    ${idx>1 ? `<button type="button" class="btn ghost" data-step-prev>← Back</button>` : `<span></span>`}
+    ${idx<WIZARD_STEPS ? `<button type="button" class="btn primary" data-step-next>Next →</button>` : `<span></span>`}
+  </div>`;
+}
 function personFormHTML(prefix){
   return `
-    <label class="field"><span>Name</span><input type="text" id="${prefix}-name" placeholder="First & last name" /></label>
-    <label class="field"><span>I am a:</span>
-      <div class="radio-row">
-        <label><input type="radio" name="${prefix}-identity" value="guy"> Guy</label>
-        <label><input type="radio" name="${prefix}-identity" value="girl"> Girl</label>
-      </div>
-    </label>
-    <label class="field"><span>Interested in:</span>
-      <div class="radio-row">
-        <label><input type="checkbox" data-name="${prefix}-lookingfor" value="guys"> Guys</label>
-        <label><input type="checkbox" data-name="${prefix}-lookingfor" value="girls"> Girls</label>
-      </div>
-    </label>
-    <label class="field"><span>Grade</span>
-      <div class="radio-row">
-        ${GRADES.map(g => `<label><input type="radio" name="${prefix}-grade" value="${g}"> ${GRADE_LABEL[g]}</label>`).join('')}
-      </div>
-    </label>
-    <label class="field"><span>Grades you're open to dating</span>
-      <div class="radio-row">
-        ${GRADES.map(g => `<label><input type="checkbox" data-name="${prefix}-gradeopento" value="${g}"> ${GRADE_LABEL[g]}</label>`).join('')}
-      </div>
-    </label>
-    <label class="field"><span>Height</span>
-      <select id="${prefix}-height">
-        <option value="">Choose height</option>
-        ${HEIGHT_OPTIONS.map(h => `<option value="${h.value}">${h.label}</option>`).join('')}
-      </select>
-    </label>
-    <label class="field"><span>Preferred height in a match (optional)</span>
-      <div class="chips" data-group="${prefix}-heightpref" data-max="0">
-        ${HEIGHT_PREF.map(h => `<label class="chip"><input type="checkbox" value="${h}" data-name="${prefix}-heightpref"/> ${h}</label>`).join('')}
-      </div>
-    </label>
-    <label class="field"><span>Interests</span>${chipGroup(prefix,'interests')}</label>
-    <label class="field"><span>Your vibe</span>${chipGroup(prefix,'vibes',3)}</label>
-    <label class="field"><span>Dream date</span>${chipGroup(prefix,'dateTypes',3)}</label>
-    <label class="field"><span>Music</span>${chipGroup(prefix,'music')}</label>
-    <label class="field"><span>Activities &amp; clubs</span>${chipGroup(prefix,'activities')}</label>
-    <label class="field"><span>Zodiac (optional)</span>
-      <select id="${prefix}-zodiac">
-        <option value="">Prefer not to say</option>
-        ${ZODIAC.map(z => `<option value="${z}">${ZODIAC_EMOJI[z]} ${z}</option>`).join('')}
-      </select>
-    </label>
-    <label class="field"><span>Mystery clue (optional)</span>
-      <textarea id="${prefix}-bio" maxlength="140" placeholder="A fun hint about you…"></textarea>
-    </label>
+    <div class="wizard-progress" id="${prefix}-wizard-progress"></div>
+    <div class="step" data-step="1">
+      <h4>The Basics</h4>
+      <label class="field"><span>Name</span><input type="text" id="${prefix}-name" placeholder="First & last name" /></label>
+      <label class="field"><span>I am a:</span>
+        <div class="radio-row">
+          <label><input type="radio" name="${prefix}-identity" value="guy"> Guy</label>
+          <label><input type="radio" name="${prefix}-identity" value="girl"> Girl</label>
+        </div>
+      </label>
+      <label class="field"><span>Interested in:</span>
+        <div class="radio-row">
+          <label><input type="checkbox" data-name="${prefix}-lookingfor" value="guys"> Guys</label>
+          <label><input type="checkbox" data-name="${prefix}-lookingfor" value="girls"> Girls</label>
+        </div>
+      </label>
+      <label class="field"><span>Grade</span>
+        <div class="radio-row">
+          ${GRADES.map(g => `<label><input type="radio" name="${prefix}-grade" value="${g}"> ${GRADE_LABEL[g]}</label>`).join('')}
+        </div>
+      </label>
+      <label class="field"><span>Grades you're open to dating</span>
+        <div class="radio-row">
+          ${GRADES.map(g => `<label><input type="checkbox" data-name="${prefix}-gradeopento" value="${g}"> ${GRADE_LABEL[g]}</label>`).join('')}
+        </div>
+      </label>
+      ${stepNav(1)}
+    </div>
+    <div class="step" data-step="2">
+      <h4>Height</h4>
+      <label class="field"><span>Height</span>
+        <select id="${prefix}-height">
+          <option value="">Choose height</option>
+          ${HEIGHT_OPTIONS.map(h => `<option value="${h.value}">${h.label}</option>`).join('')}
+        </select>
+      </label>
+      <label class="field"><span>Preferred height in a match (optional)</span>
+        <div class="chips" data-group="${prefix}-heightpref" data-max="0">
+          ${HEIGHT_PREF.map(h => `<label class="chip"><input type="checkbox" value="${h}" data-name="${prefix}-heightpref"/> ${h}</label>`).join('')}
+        </div>
+      </label>
+      ${stepNav(2)}
+    </div>
+    <div class="step" data-step="3">
+      <h4>What You're Into</h4>
+      <label class="field"><span>Interests</span>${chipGroup(prefix,'interests')}</label>
+      <label class="field"><span>Activities &amp; clubs</span>${chipGroup(prefix,'activities')}</label>
+      ${stepNav(3)}
+    </div>
+    <div class="step" data-step="4">
+      <h4>Vibe &amp; Style</h4>
+      <label class="field"><span>Your vibe</span>${chipGroup(prefix,'vibes',3)}</label>
+      <label class="field"><span>Dream date</span>${chipGroup(prefix,'dateTypes',3)}</label>
+      <label class="field"><span>Music</span>${chipGroup(prefix,'music')}</label>
+      <label class="field"><span>Zodiac (optional)</span>
+        <select id="${prefix}-zodiac">
+          <option value="">Prefer not to say</option>
+          ${ZODIAC.map(z => `<option value="${z}">${ZODIAC_EMOJI[z]} ${z}</option>`).join('')}
+        </select>
+      </label>
+      ${stepNav(4)}
+    </div>
+    <div class="step" data-step="5">
+      <h4>Personality &amp; Values</h4>
+      <p class="muted" style="margin-top:0">A little deeper than the basics — this feeds into your match too.</p>
+      <label class="field"><span>Your social battery</span>
+        <div class="radio-row">
+          ${SOCIAL_STYLE.map(s => `<label><input type="radio" name="${prefix}-social" value="${s}"> ${SOCIAL_STYLE_EMOJI[s]} ${s}</label>`).join('')}
+        </div>
+      </label>
+      <label class="field"><span>Texting/calling style</span>
+        <div class="radio-row">
+          ${COMM_STYLE.map(s => `<label><input type="radio" name="${prefix}-comm" value="${s}"> ${COMM_STYLE_EMOJI[s]} ${s}</label>`).join('')}
+        </div>
+      </label>
+      <label class="field"><span>Your love language</span>
+        <div class="radio-row">
+          ${LOVE_LANGUAGE.map(s => `<label><input type="radio" name="${prefix}-lovelang" value="${s}"> ${LOVE_LANGUAGE_EMOJI[s]} ${s}</label>`).join('')}
+        </div>
+      </label>
+      <label class="field"><span>What matters most on a date</span>${chipGroup(prefix,'whatMatters',2)}</label>
+      ${stepNav(5)}
+    </div>
+    <div class="step" data-step="6">
+      <h4>Last Thing</h4>
+      <label class="field"><span>Mystery clue (optional)</span>
+        <textarea id="${prefix}-bio" maxlength="140" placeholder="A fun hint about you…"></textarea>
+      </label>
+      ${stepNav(6)}
+    </div>
   `;
 }
 function wireChipHighlighting(container){
@@ -461,6 +527,30 @@ function wireChipHighlighting(container){
     });
     sync();
   });
+}
+function wizardShow(prefix, n){
+  const container = document.getElementById(prefix+'-form-container');
+  if(!container) return;
+  const steps = [...container.querySelectorAll('.step')];
+  if(!steps.length) return;
+  n = Math.max(1, Math.min(steps.length, n));
+  steps.forEach(s => s.classList.toggle('active', parseInt(s.dataset.step,10)===n));
+  container.dataset.currentStep = n;
+  const progressEl = document.getElementById(prefix+'-wizard-progress');
+  if(progressEl) progressEl.textContent = `Step ${n} of ${steps.length}`;
+  const submitBtn = document.getElementById(prefix+'-submit');
+  if(submitBtn) submitBtn.style.display = (n===steps.length) ? '' : 'none';
+  container.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function initWizard(prefix){
+  const container = document.getElementById(prefix+'-form-container');
+  container.querySelectorAll('[data-step-next]').forEach(btn => btn.addEventListener('click', () => {
+    wizardShow(prefix, parseInt(container.dataset.currentStep||'1',10)+1);
+  }));
+  container.querySelectorAll('[data-step-prev]').forEach(btn => btn.addEventListener('click', () => {
+    wizardShow(prefix, parseInt(container.dataset.currentStep||'1',10)-1);
+  }));
+  wizardShow(prefix, 1);
 }
 function resolveOther(prefix, groupKey, values){
   const idx = values.indexOf('Other');
@@ -500,8 +590,15 @@ function readPersonForm(prefix){
   const music = resolveOther(prefix,'music', [...document.querySelectorAll(`input[data-name="${prefix}-music"]:checked`)].map(i=>i.value));
   const activities = resolveOther(prefix,'activities', [...document.querySelectorAll(`input[data-name="${prefix}-activities"]:checked`)].map(i=>i.value));
   const zodiac = document.getElementById(prefix+'-zodiac').value;
+  const socialEl = document.querySelector(`input[name="${prefix}-social"]:checked`);
+  const social = socialEl ? socialEl.value : null;
+  const commEl = document.querySelector(`input[name="${prefix}-comm"]:checked`);
+  const comm = commEl ? commEl.value : null;
+  const loveLangEl = document.querySelector(`input[name="${prefix}-lovelang"]:checked`);
+  const loveLanguage = loveLangEl ? loveLangEl.value : null;
+  const whatMatters = resolveOther(prefix,'whatMatters', [...document.querySelectorAll(`input[data-name="${prefix}-whatMatters"]:checked`)].map(i=>i.value));
   const bio = (document.getElementById(prefix+'-bio').value || '').trim();
-  return { name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, zodiac, bio };
+  return { name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, zodiac, social, comm, loveLanguage, whatMatters, bio };
 }
 function validatePerson(p){
   if(!p.name) return 'Please enter a name.';
@@ -529,16 +626,26 @@ function fillPersonForm(prefix, p){
   fillChipGroupWithOther(prefix, 'music', p.music);
   fillChipGroupWithOther(prefix, 'activities', p.activities);
   document.getElementById(prefix+'-zodiac').value = p.zodiac || '';
+  const socialEl = document.querySelector(`input[name="${prefix}-social"][value="${p.social}"]`);
+  if(socialEl) socialEl.checked = true;
+  const commEl = document.querySelector(`input[name="${prefix}-comm"][value="${p.comm}"]`);
+  if(commEl) commEl.checked = true;
+  const loveLangEl = document.querySelector(`input[name="${prefix}-lovelang"][value="${p.loveLanguage}"]`);
+  if(loveLangEl) loveLangEl.checked = true;
+  fillChipGroupWithOther(prefix, 'whatMatters', p.whatMatters);
   document.getElementById(prefix+'-bio').value = p.bio || '';
 }
 function clearPersonForm(prefix){
   document.getElementById(prefix+'-name').value = '';
   document.querySelectorAll(`input[name="${prefix}-identity"]`).forEach(i=>i.checked=false);
   document.querySelectorAll(`input[name="${prefix}-grade"]`).forEach(i=>i.checked=false);
+  document.querySelectorAll(`input[name="${prefix}-social"]`).forEach(i=>i.checked=false);
+  document.querySelectorAll(`input[name="${prefix}-comm"]`).forEach(i=>i.checked=false);
+  document.querySelectorAll(`input[name="${prefix}-lovelang"]`).forEach(i=>i.checked=false);
   document.getElementById(prefix+'-height').value = '';
   document.getElementById(prefix+'-zodiac').value = '';
   document.querySelectorAll(`input[data-name^="${prefix}-"]`).forEach(i=>{ i.checked=false; if(i.closest('.chip')) i.closest('.chip').classList.remove('checked'); });
-  ['interests','vibes','dateTypes','music','activities'].forEach(g => {
+  ['interests','vibes','dateTypes','music','activities','whatMatters'].forEach(g => {
     const el = document.getElementById(`${prefix}-${g}-other`);
     if(el){ el.value=''; el.style.display='none'; }
   });
@@ -549,6 +656,7 @@ function clearPersonForm(prefix){
 const joinContainer = document.getElementById('join-form-container');
 joinContainer.innerHTML = personFormHTML('join');
 wireChipHighlighting(joinContainer);
+initWizard('join');
 function refreshJoinCount(){ document.getElementById('join-count').textContent = state.islanders.length + ' joined so far'; }
 refreshJoinCount();
 document.getElementById('join-submit').addEventListener('click', () => {
@@ -559,6 +667,7 @@ document.getElementById('join-submit').addEventListener('click', () => {
   p.id = uid(); p.source = 'self'; p.createdAt = Date.now();
   state.islanders.push(p); save();
   clearPersonForm('join');
+  wizardShow('join', 1);
   banner.innerHTML = `<div class="banner ok">You're in the villa, ${escapeHtml(p.name)}! 💕 Wait for the mystery reveal.</div>`;
   refreshJoinCount();
 });
@@ -567,6 +676,7 @@ document.getElementById('join-submit').addEventListener('click', () => {
 const ownerContainer = document.getElementById('owner-form-container');
 ownerContainer.innerHTML = personFormHTML('owner');
 wireChipHighlighting(ownerContainer);
+initWizard('owner');
 let editingId = null;
 document.getElementById('owner-submit').addEventListener('click', () => {
   const p = readPersonForm('owner');
@@ -585,10 +695,10 @@ document.getElementById('owner-submit').addEventListener('click', () => {
     state.islanders.push(p);
     banner.innerHTML = `<div class="banner ok">Added ${escapeHtml(p.name)}.</div>`;
   }
-  save(); clearPersonForm('owner'); renderOwner();
+  save(); clearPersonForm('owner'); wizardShow('owner', 1); renderOwner();
 });
 document.getElementById('owner-cancel-edit').addEventListener('click', () => {
-  editingId = null; clearPersonForm('owner');
+  editingId = null; clearPersonForm('owner'); wizardShow('owner', 1);
   document.getElementById('owner-submit').textContent = 'Add islander';
   document.getElementById('owner-cancel-edit').style.display = 'none';
 });
@@ -623,6 +733,7 @@ function renderRoster(){
     if(!p) return;
     editingId = p.id;
     fillPersonForm('owner', p);
+    wizardShow('owner', 1);
     document.getElementById('owner-submit').textContent = 'Save changes';
     document.getElementById('owner-cancel-edit').style.display = '';
     document.getElementById('owner-form-container').scrollIntoView({behavior:'smooth'});
@@ -663,8 +774,8 @@ document.getElementById('bulk-submit').addEventListener('click', () => {
   let added = 0; const problems = [];
   lines.forEach((line, i) => {
     const parts = line.split('|').map(s=>s.trim());
-    if(parts.length < 13){ problems.push(`Line ${i+1}: expected 13-14 fields, got ${parts.length}.`); return; }
-    const [name, identityRaw, lookingRaw, gradeRaw, gradeOpenRaw, heightRaw, heightPrefRaw, interestsRaw, vibesRaw, dateRaw, musicRaw, activitiesRaw, zodiacRaw, bio] = parts;
+    if(parts.length < 17){ problems.push(`Line ${i+1}: expected 17-18 fields, got ${parts.length}.`); return; }
+    const [name, identityRaw, lookingRaw, gradeRaw, gradeOpenRaw, heightRaw, heightPrefRaw, interestsRaw, vibesRaw, dateRaw, musicRaw, activitiesRaw, zodiacRaw, socialRaw, commRaw, loveLangRaw, whatMattersRaw, bio] = parts;
     if(!name){ problems.push(`Line ${i+1}: missing name.`); return; }
     const identityLower = identityRaw.toLowerCase();
     if(!['guy','girl'].includes(identityLower)) problems.push(`Line ${i+1} (${name}): identity "${identityRaw}" not recognized (use guy or girl), defaulted to guy.`);
@@ -686,8 +797,12 @@ document.getElementById('bulk-submit').addEventListener('click', () => {
     const music = normalizeTagList(musicRaw, TAGS.music);
     const activities = normalizeTagList(activitiesRaw, TAGS.activities);
     const zodiac = ZODIAC.find(z => z.toLowerCase() === (zodiacRaw||'').trim().toLowerCase()) || '';
+    const social = SOCIAL_STYLE.find(s => s.toLowerCase() === (socialRaw||'').trim().toLowerCase()) || null;
+    const comm = COMM_STYLE.find(s => s.toLowerCase() === (commRaw||'').trim().toLowerCase()) || null;
+    const loveLanguage = LOVE_LANGUAGE.find(s => s.toLowerCase() === (loveLangRaw||'').trim().toLowerCase()) || null;
+    const whatMatters = normalizeTagList(whatMattersRaw, TAGS.whatMatters).slice(0,2);
     if(!interests.length){ problems.push(`Line ${i+1} (${name}): no interests found.`); }
-    state.islanders.push({ id: uid(), name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, zodiac, bio: (bio||'').trim(), source:'owner-bulk', createdAt: Date.now() });
+    state.islanders.push({ id: uid(), name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, zodiac, social, comm, loveLanguage, whatMatters, bio: (bio||'').trim(), source:'owner-bulk', createdAt: Date.now() });
     added++;
   });
   save(); renderOwner();
@@ -760,14 +875,21 @@ function computeScore(a,b){
     dateTypes: overlap(a.dateTypes,b.dateTypes),
     music: overlap(a.music,b.music),
     activities: overlap(a.activities||[],b.activities||[]),
+    whatMatters: overlap(a.whatMatters||[],b.whatMatters||[]),
     sameGrade: !!(a.grade && b.grade && a.grade===b.grade),
-    heightCompat: heightCompat(a,b)
+    heightCompat: heightCompat(a,b),
+    sameSocial: !!(a.social && b.social && a.social===b.social),
+    sameComm: !!(a.comm && b.comm && a.comm===b.comm),
+    sameLoveLanguage: !!(a.loveLanguage && b.loveLanguage && a.loveLanguage===b.loveLanguage)
   };
   let score = shared.interests.length*WEIGHTS.interests + shared.vibes.length*WEIGHTS.vibes +
     shared.dateTypes.length*WEIGHTS.dateTypes + shared.music.length*WEIGHTS.music +
-    shared.activities.length*WEIGHTS.activities;
+    shared.activities.length*WEIGHTS.activities + shared.whatMatters.length*WEIGHTS.whatMatters;
   if(shared.heightCompat==='mutual') score += HEIGHT_BONUS.mutual;
   else if(shared.heightCompat==='partial') score += HEIGHT_BONUS.partial;
+  if(shared.sameSocial) score += PERSONALITY_BONUS.social;
+  if(shared.sameComm) score += PERSONALITY_BONUS.comm;
+  if(shared.sameLoveLanguage) score += PERSONALITY_BONUS.loveLanguage;
   return { score, shared };
 }
 function lockedResults(){
@@ -846,11 +968,14 @@ document.getElementById('gen-matches').addEventListener('click', () => {
 });
 function sharedSummary(shared){
   const bits = [];
-  ['interests','vibes','dateTypes','music','activities'].forEach(k => {
+  ['interests','vibes','dateTypes','music','activities','whatMatters'].forEach(k => {
     (shared[k]||[]).forEach(t => bits.push(`${tagEmoji(k,t)} ${t}`));
   });
   if(shared.sameGrade) bits.push('🎓 same grade');
   if(shared.heightCompat==='mutual') bits.push('📏 height match');
+  if(shared.sameSocial) bits.push('🔋 same social battery');
+  if(shared.sameComm) bits.push('📲 same texting style');
+  if(shared.sameLoveLanguage) bits.push('💞 same love language');
   return bits.length ? bits.join(', ') : 'a mystery spark ✨';
 }
 const MODE_BADGE = { locked:'💫 teacher pick', swipe:'🔥 mutual swipe match', score:'✨ villa pick' };
@@ -889,12 +1014,12 @@ function downloadCSV(filename, rows){
   URL.revokeObjectURL(url);
 }
 document.getElementById('export-roster').addEventListener('click', () => {
-  const rows = [['Name','Grade','Open to grades','Identity','Open to','Height','Height Preference','Interests','Vibe','Date Ideas','Music','Activities/Clubs','Zodiac','Mystery Clue']];
+  const rows = [['Name','Grade','Open to grades','Identity','Open to','Height','Height Preference','Interests','Vibe','Date Ideas','Music','Activities/Clubs','Zodiac','Social Style','Texting Style','Love Language','What Matters Most','Mystery Clue']];
   state.islanders.forEach(p => rows.push([
     p.name, GRADE_LABEL[p.grade]||'', (p.gradeOpenTo||[]).map(g=>GRADE_LABEL[g]).join(', '),
     IDENTITY_LABEL[p.identity], p.lookingFor.join(', '), formatHeight(p.heightIn), (p.heightPref||[]).join(', '),
     p.interests.join(', '), p.vibes.join(', '), p.dateTypes.join(', '), p.music.join(', '),
-    (p.activities||[]).join(', '), p.zodiac||'', p.bio
+    (p.activities||[]).join(', '), p.zodiac||'', p.social||'', p.comm||'', p.loveLanguage||'', (p.whatMatters||[]).join(', '), p.bio
   ]));
   downloadCSV('villa-roster.csv', rows);
 });
@@ -986,6 +1111,10 @@ function renderSwipeCard(){
       ${target.dateTypes.map(t=>`<span class="tag-mini">${tagEmoji('dateTypes',t)} ${t}</span>`).join('')}
       ${target.music.map(t=>`<span class="tag-mini">${tagEmoji('music',t)} ${t}</span>`).join('')}
       ${(target.activities||[]).map(t=>`<span class="tag-mini">${tagEmoji('activities',t)} ${t}</span>`).join('')}
+      ${target.social ? `<span class="tag-mini">${SOCIAL_STYLE_EMOJI[target.social]||''} ${target.social}</span>` : ''}
+      ${target.comm ? `<span class="tag-mini">${COMM_STYLE_EMOJI[target.comm]||''} ${target.comm}</span>` : ''}
+      ${target.loveLanguage ? `<span class="tag-mini">${LOVE_LANGUAGE_EMOJI[target.loveLanguage]||''} ${target.loveLanguage}</span>` : ''}
+      ${(target.whatMatters||[]).map(t=>`<span class="tag-mini">${tagEmoji('whatMatters',t)} ${t}</span>`).join('')}
       <div class="swipe-bio">"${escapeHtml(target.bio) || 'No mystery clue given…'}"</div>
       <div class="swipe-actions">
         <button class="swipe-pass" data-swipe="pass" data-target="${target.id}" title="Pass">✖</button>
