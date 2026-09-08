@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Love Island: Mystery Homecoming — Date Matcher</title>
+<meta name="description" content="A Love Island-style mystery homecoming date matcher. Islanders enter their preferences, the villa scores every possible pair, and a teacher runs the mystery reveal." />
+<link rel="icon" href="/mhhs-tiger-logo.png" type="image/png" />
+<link rel="apple-touch-icon" href="/mhhs-tiger-logo.png" />
+<style>
+  :root{
+    --pink:#f4791f; --pink-soft:#ffb066; --orange:#c9531a; --teal:#e8d9b0;
+    --purple:#241a10; --night:#0b0b0b; --night2:#1c1712; --card:rgba(243,233,210,.06);
+    --card-border:rgba(243,233,210,.16); --ink:#f3ead2; --ink-dim:#c9bd9e;
+    --good:#7fcf7a; --bad:#ff6b5c;
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; color:var(--ink);
+    background:
+      radial-gradient(circle at 15% 10%, rgba(244,121,31,.22), transparent 45%),
+      radial-gradient(circle at 85% 0%, rgba(232,217,176,.1), transparent 40%),
+      radial-gradient(circle at 50% 100%, rgba(120,60,20,.3), transparent 55%),
+      linear-gradient(180deg, var(--night), var(--night2));
+    background-attachment:fixed;
+  }
+  a{color:var(--teal)}
+  .wrap{max-width:980px; margin:0 auto; padding:20px 16px 80px}
+  header.top{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:18px 16px}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:800; font-size:1.25rem; letter-spacing:.2px}
+  .brand .heart{width:38px; height:38px; filter:drop-shadow(0 0 10px rgba(244,121,31,.7))}
+  .brand small{display:block; font-weight:500; color:var(--ink-dim); font-size:.7rem; letter-spacing:1.5px; text-transform:uppercase}
+  nav.tabs{display:flex; gap:8px; flex-wrap:wrap}
+  nav.tabs button{
+    background:var(--card); border:1px solid var(--card-border); color:var(--ink);
+    padding:9px 16px; border-radius:999px; cursor:pointer; font-weight:600; font-size:.85rem;
+  }
+  nav.tabs button.active{background:linear-gradient(135deg,var(--pink),var(--orange)); border-color:transparent; box-shadow:0 4px 18px rgba(244,121,31,.4)}
+  .view{display:none}
+  .view.active{display:block}
+  .card{
+    background:var(--card); border:1px solid var(--card-border); border-radius:18px;
+    padding:22px; margin-bottom:18px; backdrop-filter:blur(6px);
+  }
+  .card h2{margin:0 0 4px; font-size:1.3rem}
+  .card h3{margin:18px 0 8px; font-size:1rem; color:var(--pink-soft)}
+  .muted{color:var(--ink-dim); font-size:.88rem; line-height:1.5}
+  label.field{display:block; margin:14px 0}
+  label.field > span{display:block; font-weight:600; font-size:.85rem; margin-bottom:6px}
+  input[type=text], input[type=password], textarea, select{
+    width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--card-border);
+    background:rgba(0,0,0,.25); color:var(--ink); font-size:.95rem; font-family:inherit;
+  }
+  textarea{resize:vertical; min-height:64px}
+  input::placeholder, textarea::placeholder{color:#9a8a6d}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px}
+  .chip{
+    display:flex; align-items:center; gap:6px; padding:8px 13px; border-radius:999px;
+    border:1px solid var(--card-border); background:rgba(0,0,0,.2); cursor:pointer; font-size:.85rem; user-select:none;
+  }
+  .chip input{accent-color:var(--pink)}
+  .chip.checked{background:linear-gradient(135deg, rgba(244,121,31,.35), rgba(201,83,26,.25)); border-color:var(--pink)}
+  .radio-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:4px}
+  .radio-row label{display:flex; align-items:center; gap:6px; font-size:.9rem; cursor:pointer}
+  .hint{font-size:.75rem; color:var(--ink-dim); margin-top:4px}
+  .btn{
+    border:none; border-radius:10px; padding:11px 18px; font-weight:700; font-size:.9rem; cursor:pointer;
+    color:#1a140c; background:linear-gradient(135deg, var(--teal), #fff6e6);
+  }
+  .btn.primary{color:#fff; background:linear-gradient(135deg, var(--pink), var(--orange))}
+  .btn.ghost{background:transparent; border:1px solid var(--card-border); color:var(--ink)}
+  .btn.danger{background:linear-gradient(135deg,#ff6b5c,#b8301c); color:#fff}
+  .btn:disabled{opacity:.4; cursor:not-allowed}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  .banner{padding:12px 14px; border-radius:12px; font-size:.85rem; margin-top:12px}
+  .banner.ok{background:rgba(127,207,122,.15); border:1px solid rgba(127,207,122,.4); color:var(--good)}
+  .banner.err{background:rgba(255,107,92,.15); border:1px solid rgba(255,107,92,.4); color:var(--bad)}
+  table{width:100%; border-collapse:collapse; font-size:.85rem}
+  th, td{text-align:left; padding:9px 8px; border-bottom:1px solid var(--card-border); vertical-align:top}
+  th{color:var(--ink-dim); font-weight:600; font-size:.75rem; text-transform:uppercase; letter-spacing:.5px}
+  .tag-mini{display:inline-block; background:rgba(255,255,255,.08); border-radius:6px; padding:2px 7px; margin:1px 3px 1px 0; font-size:.72rem}
+  .roster-actions button{margin-right:6px}
+  .couple-card{
+    background:linear-gradient(160deg, rgba(244,121,31,.16), rgba(120,60,20,.16));
+    border:1px solid var(--card-border); border-radius:18px; padding:24px; text-align:center;
+  }
+  .couple-names{font-size:1.6rem; font-weight:800; margin:10px 0}
+  .couple-names .x{color:var(--pink-soft); margin:0 10px}
+  .clue{background:rgba(0,0,0,.25); border-radius:12px; padding:12px 16px; margin:8px 0; font-style:italic}
+  .why{margin-top:14px; font-size:.85rem; color:var(--ink-dim)}
+  .reveal-progress{font-size:.8rem; color:var(--ink-dim); margin-bottom:10px}
+  .leftover{font-size:.85rem; color:var(--ink-dim)}
+  .locked-list li{margin-bottom:6px; font-size:.85rem}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  code.tmpl{display:block; white-space:pre-wrap; background:rgba(0,0,0,.35); padding:12px; border-radius:10px; font-size:.75rem; color:var(--teal); margin-top:8px}
+  .count-pill{background:rgba(0,0,0,.25); border-radius:999px; padding:3px 10px; font-size:.72rem; color:var(--ink-dim)}
+  .swipe-card{
+    background:linear-gradient(160deg, rgba(201,83,26,.18), rgba(244,121,31,.12));
+    border:1px solid var(--card-border); border-radius:20px; padding:26px; text-align:center; max-width:420px; margin:16px auto 0;
+  }
+  .swipe-card h4{margin:0 0 10px; font-size:1rem; color:var(--pink-soft)}
+  .swipe-bio{background:rgba(0,0,0,.25); border-radius:12px; padding:12px 16px; margin:12px 0; font-style:italic}
+  .swipe-actions{display:flex; justify-content:center; gap:18px; margin-top:18px}
+  .swipe-actions button{width:64px; height:64px; border-radius:50%; font-size:1.5rem; border:none; cursor:pointer}
+  .swipe-pass{background:rgba(255,107,92,.2); border:2px solid var(--bad) !important; color:var(--bad)}
+  .swipe-like{background:rgba(127,207,122,.2); border:2px solid var(--good) !important; color:var(--good)}
+  .swipe-progress{text-align:center; color:var(--ink-dim); font-size:.8rem; margin-top:12px}
+  .mode-choice{display:flex; flex-direction:column; gap:10px; margin-top:8px}
+  .mode-choice label{display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border:1px solid var(--card-border); border-radius:12px; cursor:pointer}
+  .mode-choice input{margin-top:3px}
+  footer{text-align:center; color:var(--ink-dim); font-size:.75rem; padding:30px 0 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <img class="heart" src="/mhhs-tiger-logo.png" alt="MHHS Tigers logo" />
+      <div>
+        Love Island: Mystery Homecoming
+        <small>villa-style date matching</small>
+      </div>
+    </div>
+    <nav class="tabs">
+      <button data-view="join" class="active">Join the Villa</button>
+      <button data-view="swipe">Swipe 💫</button>
+      <button data-view="owner">Owner Panel 🔒</button>
+    </nav>
+  </header>
+
+  <!-- JOIN VIEW -->
+  <section id="view-join" class="view active">
+    <div class="card">
+      <h2>Enter the Villa 🏝️</h2>
+      <p class="muted">Fill this out once. Your teacher will run the mystery matching after everyone's in — your <strong>Mystery Clue</strong> gets shown before your name during the reveal. Everything stays saved only on this device/browser.</p>
+      <div id="join-form-container"></div>
+      <div class="row" style="margin-top:16px">
+        <button class="btn primary" id="join-submit">Join the Villa 💌</button>
+        <span class="count-pill" id="join-count"></span>
+      </div>
+      <div id="join-banner"></div>
+    </div>
+  </section>
+
+  <!-- SWIPE VIEW -->
+  <section id="view-swipe" class="view">
+    <div class="card">
+      <h2>Swipe 💫</h2>
+      <p class="muted">Tinder-style matching: review anonymized "mystery" islanders and swipe. Two people only match if you <strong>both</strong> swipe yes on each other — your teacher decides which matching mode (this or the compatibility score) actually gets used to generate results.</p>
+      <label class="field"><span>Who are you?</span>
+        <select id="swipe-who"><option value="">Choose your name…</option></select>
+      </label>
+      <div id="swipe-area"></div>
+    </div>
+  </section>
+
+  <!-- OWNER GATE -->
+  <section id="view-owner-gate" class="view">
+    <div class="card" style="max-width:420px">
+      <h2 id="gate-title">Teacher Passcode</h2>
+      <p class="muted" id="gate-desc"></p>
+      <label class="field"><span>Passcode</span><input type="password" id="gate-input" placeholder="••••••" /></label>
+      <div class="row"><button class="btn primary" id="gate-submit">Unlock</button></div>
+      <div id="gate-banner"></div>
+      <p class="hint">Heads up: this is a simple classroom gate, not real security — it's stored in this browser only, just to keep students from casually poking around.</p>
+    </div>
+  </section>
+
+  <!-- OWNER VIEW -->
+  <section id="view-owner" class="view">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2>Owner Panel 🔒</h2>
+        <div class="row">
+          <button class="btn ghost" id="owner-change-pass">Change passcode</button>
+          <button class="btn ghost" id="owner-lock">Lock panel</button>
+        </div>
+      </div>
+      <p class="muted">Roster, manual entry, bulk import, and matching all live here.</p>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Roster (<span id="roster-count">0</span> islanders)</h3>
+      <div style="overflow-x:auto">
+        <table id="roster-table"><thead><tr>
+          <th>Name</th><th>Grade</th><th>Identity</th><th>Open to</th><th>Height</th><th>Interests</th><th>Vibe</th><th></th>
+        </tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Add an islander manually</h3>
+      <p class="muted">Use this to type in one paper form at a time.</p>
+      <div id="owner-form-container"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary" id="owner-submit">Add islander</button>
+        <button class="btn ghost" id="owner-cancel-edit" style="display:none">Cancel edit</button>
+      </div>
+      <div id="owner-form-banner"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Bulk import ("scan the stack in")</h3>
+      <p class="muted">Paste one islander per line, fields separated by <code>|</code>. Great for quickly transcribing a stack of scanned/paper forms at once.</p>
+      <code class="tmpl">Name | Identity(guy/girl/other) | Open to(guys,girls,other) | Grade(9/10/11/12) | Open to grades(comma list of 9,10,11,12) | Height(e.g. 5'6") | Height pref(comma: Taller than me,Shorter than me,About the same height,No preference) | Interests(comma list) | Vibe words(comma list) | Date ideas(comma list) | Music(comma list) | Activities/clubs(comma list) | Zodiac(optional) | Mystery clue(optional)
+Jordan Lee | girl | guys,other | 11 | 10,11,12 | 5'6" | About the same height | Music,Gaming | Funny,Bold | Movie Night,Arcade/Games | Pop,Indie/Alt | Band/Choir/Orchestra,Honor Society | Leo | Once tried to teach a cat to skateboard.</code>
+      <label class="field"><span>Paste rows here</span><textarea id="bulk-input" rows="6" placeholder="Paste scanned/transcribed rows here…"></textarea></label>
+      <div class="row"><button class="btn" id="bulk-submit">Import rows</button></div>
+      <div id="bulk-banner"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Matchmaking</h3>
+      <p class="muted">Choose how "Run the Villa Match" decides couples. Both modes still respect locked-in couples below.</p>
+      <div class="mode-choice">
+        <label>
+          <input type="radio" name="match-mode" value="score">
+          <span><strong>Compatibility score.</strong> Scores every eligible pair on shared interests, vibe, ideal date type, and music taste, then pairs up the strongest matches first.</span>
+        </label>
+        <label>
+          <input type="radio" name="match-mode" value="swipe">
+          <span><strong>Swipe &amp; match (Tinder-style).</strong> Only pairs people who <em>both</em> swiped yes on each other in the Swipe tab. Ties among someone's multiple mutual matches are broken by compatibility score.</span>
+        </label>
+      </div>
+      <p class="muted" id="swipe-stats" style="margin-top:10px"></p>
+      <div class="grid2" style="margin-top:14px">
+        <div>
+          <h4 style="margin:0 0 6px">Lock in a couple first (optional)</h4>
+          <div class="row">
+            <select id="lock-a"></select>
+            <span>×</span>
+            <select id="lock-b"></select>
+            <button class="btn ghost" id="lock-add">Lock couple</button>
+          </div>
+          <ul class="locked-list" id="locked-list" style="padding-left:18px; margin-top:10px"></ul>
+        </div>
+        <div>
+          <h4 style="margin:0 0 6px">Generate</h4>
+          <div class="row">
+            <button class="btn primary" id="gen-matches">Run the Villa Match 💘</button>
+            <button class="btn ghost" id="reset-all">Reset everything</button>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn ghost" id="export-roster">Export roster CSV</button>
+            <button class="btn ghost" id="export-matches">Export matches CSV</button>
+          </div>
+        </div>
+      </div>
+      <div id="match-banner"></div>
+    </div>
+
+    <div class="card" id="results-card" style="display:none">
+      <div class="row" style="justify-content:space-between">
+        <h3 style="margin:0">Results</h3>
+        <button class="btn primary" id="start-reveal">Start Mystery Reveal 🕵️‍♀️</button>
+      </div>
+      <div id="results-list" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <!-- REVEAL VIEW -->
+  <section id="view-reveal" class="view">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0">Mystery Reveal 🕵️‍♀️</h2>
+        <button class="btn ghost" id="reveal-exit">Back to Owner Panel</button>
+      </div>
+      <div class="reveal-progress" id="reveal-progress"></div>
+      <div class="couple-card" id="reveal-card"></div>
+      <div class="row" style="justify-content:center; margin-top:16px">
+        <button class="btn ghost" id="reveal-prev">← Prev</button>
+        <button class="btn primary" id="reveal-flip">Reveal Names 💥</button>
+        <button class="btn ghost" id="reveal-next">Next →</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>All data stays local to this browser (localStorage) — nothing is sent to a server.</footer>
+</div>
+
+<script>
+'use strict';
+const STORAGE_KEY = 'love-island-homecoming-v1';
+
+const TAGS = {
+  interests: ['Sports','Music','Gaming','Art & Design','Movies & TV','Outdoors/Nature','Cooking/Baking','Reading','Fashion','Fitness/Gym','Cars','Photography','Dance','Theater/Drama','Volunteering','Tech/Coding'],
+  vibes: ['Funny','Chill','Adventurous','Romantic','Competitive','Mysterious','Sweet','Bold','Thoughtful','Confident','Shy at first'],
+  dateTypes: ['Fancy Dinner','Arcade/Games','Movie Night','Outdoor Adventure','Chill Hangout','Dancing','Coffee & Talk','Sports Event'],
+  music: ['Pop','Hip-Hop/Rap','Country','Rock','Indie/Alt','EDM/Dance','R&B/Soul','Latin'],
+  activities: ['Varsity/JV Sports','Band/Choir/Orchestra','Drama/Theater','Student Government','Honor Society','FFA/4-H','Robotics/STEM Club','Art Club','Debate/Speech','Yearbook/Newspaper','Key Club/Volunteering','Part-time Job','Church/Youth Group']
+};
+const EMOJI = {
+  interests:{'Sports':'⚽','Music':'🎵','Gaming':'🎮','Art & Design':'🎨','Movies & TV':'🎬','Outdoors/Nature':'🌲','Cooking/Baking':'🍳','Reading':'📚','Fashion':'👗','Fitness/Gym':'🏋️','Cars':'🚗','Photography':'📷','Dance':'💃','Theater/Drama':'🎭','Volunteering':'🤝','Tech/Coding':'💻'},
+  vibes:{'Funny':'😂','Chill':'😌','Adventurous':'🧗','Romantic':'🌹','Competitive':'🏆','Mysterious':'🕵️','Sweet':'🍯','Bold':'🔥','Thoughtful':'💭','Confident':'😎','Shy at first':'🙈'},
+  dateTypes:{'Fancy Dinner':'🍽️','Arcade/Games':'🕹️','Movie Night':'🎥','Outdoor Adventure':'🏕️','Chill Hangout':'🛋️','Dancing':'💃','Coffee & Talk':'☕','Sports Event':'🏟️'},
+  music:{'Pop':'🎤','Hip-Hop/Rap':'🎧','Country':'🤠','Rock':'🎸','Indie/Alt':'🎹','EDM/Dance':'🪩','R&B/Soul':'🎶','Latin':'💃'},
+  activities:{'Varsity/JV Sports':'🏅','Band/Choir/Orchestra':'🎺','Drama/Theater':'🎭','Student Government':'🏛️','Honor Society':'🎓','FFA/4-H':'🌾','Robotics/STEM Club':'🤖','Art Club':'🖌️','Debate/Speech':'🎙️','Yearbook/Newspaper':'📰','Key Club/Volunteering':'🤝','Part-time Job':'💼','Church/Youth Group':'⛪'}
+};
+const IDENTITY_LABEL = {guy:'Guy', girl:'Girl', other:'Nonbinary / Other'};
+const GRADES = ['9','10','11','12'];
+const GRADE_LABEL = {'9':'9th (Freshman)','10':'10th (Sophomore)','11':'11th (Junior)','12':'12th (Senior)'};
+const HEIGHT_PREF = ['Taller than me','Shorter than me','About the same height','No preference'];
+const ZODIAC = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const ZODIAC_EMOJI = {'Aries':'♈','Taurus':'♉','Gemini':'♊','Cancer':'♋','Leo':'♌','Virgo':'♍','Libra':'♎','Scorpio':'♏','Sagittarius':'♐','Capricorn':'♑','Aquarius':'♒','Pisces':'♓'};
+const WEIGHTS = {interests:3, vibes:2.5, dateTypes:2, music:1.5, activities:2.5};
+const HEIGHT_BONUS = {mutual:2.5, partial:1};
+
+function uid(){ return 'p_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    const s = JSON.parse(raw);
+    return Object.assign(defaultState(), s);
+  }catch(e){ return defaultState(); }
+}
+function defaultState(){
+  return { islanders: [], lockedPairs: [], ownerPasscode: null, ownerUnlocked:false, results: null, revealIndex: 0, revealFlipped: false, swipes: {}, matchMode: 'score', swipeAsId: null };
+}
+let state = load();
+function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+
+// ---------- Navigation ----------
+const tabButtons = document.querySelectorAll('nav.tabs button');
+tabButtons.forEach(b => b.addEventListener('click', () => {
+  if(b.dataset.view === 'owner'){ goOwner(); }
+  else{ showView(b.dataset.view); if(b.dataset.view === 'swipe') renderSwipe(); }
+}));
+function showView(name){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  tabButtons.forEach(b => b.classList.toggle('active', b.dataset.view === name || (name==='owner-gate' && b.dataset.view==='owner') || (name==='reveal' && b.dataset.view==='owner')));
+}
+function goOwner(){
+  if(state.ownerPasscode && state.ownerUnlocked){ showView('owner'); renderOwner(); }
+  else{ renderGate(); showView('owner-gate'); }
+}
+function renderGate(){
+  const isSetup = !state.ownerPasscode;
+  document.getElementById('gate-title').textContent = isSetup ? 'Set a teacher passcode' : 'Enter teacher passcode';
+  document.getElementById('gate-desc').textContent = isSetup
+    ? 'No passcode set yet on this device. Pick one now to protect the owner panel.'
+    : 'Enter the passcode to access the roster and matching tools.';
+  document.getElementById('gate-submit').textContent = isSetup ? 'Set passcode' : 'Unlock';
+  document.getElementById('gate-input').value = '';
+  document.getElementById('gate-banner').innerHTML = '';
+}
+document.getElementById('gate-submit').addEventListener('click', () => {
+  const val = document.getElementById('gate-input').value;
+  const banner = document.getElementById('gate-banner');
+  if(!state.ownerPasscode){
+    if(val.length < 3){ banner.innerHTML = '<div class="banner err">Pick a passcode with at least 3 characters.</div>'; return; }
+    state.ownerPasscode = val; state.ownerUnlocked = true; save();
+    showView('owner'); renderOwner();
+  } else {
+    if(val === state.ownerPasscode){ state.ownerUnlocked = true; save(); showView('owner'); renderOwner(); }
+    else{ banner.innerHTML = '<div class="banner err">Wrong passcode.</div>'; }
+  }
+});
+document.getElementById('owner-lock').addEventListener('click', () => { state.ownerUnlocked = false; save(); showView('join'); });
+document.getElementById('owner-change-pass').addEventListener('click', () => {
+  const cur = prompt('Enter current passcode to confirm:');
+  if(cur !== state.ownerPasscode){ alert('Incorrect current passcode.'); return; }
+  const next = prompt('Enter new passcode:');
+  if(next && next.length >= 3){ state.ownerPasscode = next; save(); alert('Passcode updated.'); }
+  else if(next !== null){ alert('Passcode must be at least 3 characters.'); }
+});
+
+// ---------- Person form ----------
+function chipGroup(prefix, groupKey, max){
+  const items = TAGS[groupKey];
+  const emoji = EMOJI[groupKey];
+  return `<div class="chips" data-group="${prefix}-${groupKey}" data-max="${max||0}">` +
+    items.map(t => `<label class="chip"><input type="checkbox" value="${t}" data-name="${prefix}-${groupKey}"/> ${emoji[t]||''} ${t}</label>`).join('') +
+    `</div>` + (max ? `<div class="hint">Choose up to ${max}.</div>` : '');
+}
+function personFormHTML(prefix){
+  return `
+    <label class="field"><span>Name</span><input type="text" id="${prefix}-name" placeholder="First & last name" /></label>
+    <label class="field"><span>How do you identify?</span>
+      <div class="radio-row">
+        <label><input type="radio" name="${prefix}-identity" value="guy"> Guy</label>
+        <label><input type="radio" name="${prefix}-identity" value="girl"> Girl</label>
+        <label><input type="radio" name="${prefix}-identity" value="other"> Nonbinary / other</label>
+      </div>
+    </label>
+    <label class="field"><span>Open to matching with</span>
+      <div class="radio-row">
+        <label><input type="checkbox" data-name="${prefix}-lookingfor" value="guys"> Guys</label>
+        <label><input type="checkbox" data-name="${prefix}-lookingfor" value="girls"> Girls</label>
+        <label><input type="checkbox" data-name="${prefix}-lookingfor" value="other"> Nonbinary / other</label>
+      </div>
+    </label>
+    <label class="field"><span>Grade</span>
+      <div class="radio-row">
+        ${GRADES.map(g => `<label><input type="radio" name="${prefix}-grade" value="${g}"> ${GRADE_LABEL[g]}</label>`).join('')}
+      </div>
+    </label>
+    <label class="field"><span>Open to matching with which grades</span>
+      <div class="radio-row">
+        ${GRADES.map(g => `<label><input type="checkbox" data-name="${prefix}-gradeopento" value="${g}"> ${GRADE_LABEL[g]}</label>`).join('')}
+      </div>
+    </label>
+    <label class="field"><span>Height</span>
+      <div class="row">
+        <select id="${prefix}-height-ft" style="width:auto">
+          <option value="">Feet</option>
+          ${[4,5,6,7].map(f => `<option value="${f}">${f} ft</option>`).join('')}
+        </select>
+        <select id="${prefix}-height-in" style="width:auto">
+          <option value="">Inches</option>
+          ${Array.from({length:12},(_,i)=>i).map(i => `<option value="${i}">${i} in</option>`).join('')}
+        </select>
+      </div>
+    </label>
+    <label class="field"><span>Height preference for a match (optional)</span>
+      <div class="chips" data-group="${prefix}-heightpref" data-max="0">
+        ${HEIGHT_PREF.map(h => `<label class="chip"><input type="checkbox" value="${h}" data-name="${prefix}-heightpref"/> ${h}</label>`).join('')}
+      </div>
+    </label>
+    <label class="field"><span>Interests</span>${chipGroup(prefix,'interests')}</label>
+    <label class="field"><span>Your vibe</span>${chipGroup(prefix,'vibes',3)}</label>
+    <label class="field"><span>Ideal date</span>${chipGroup(prefix,'dateTypes',3)}</label>
+    <label class="field"><span>Music taste</span>${chipGroup(prefix,'music')}</label>
+    <label class="field"><span>School activities &amp; clubs</span>${chipGroup(prefix,'activities')}</label>
+    <label class="field"><span>Zodiac sign (optional, just for fun)</span>
+      <select id="${prefix}-zodiac">
+        <option value="">Prefer not to say</option>
+        ${ZODIAC.map(z => `<option value="${z}">${ZODIAC_EMOJI[z]} ${z}</option>`).join('')}
+      </select>
+    </label>
+    <label class="field"><span>Mystery clue (optional, shown before your name in the reveal)</span>
+      <textarea id="${prefix}-bio" maxlength="140" placeholder="A fun hint about you…"></textarea>
+    </label>
+  `;
+}
+function wireChipHighlighting(container){
+  container.querySelectorAll('.chip').forEach(chip => {
+    const input = chip.querySelector('input');
+    const sync = () => chip.classList.toggle('checked', input.checked);
+    input.addEventListener('change', () => {
+      const group = input.closest('.chips');
+      const max = parseInt(group.dataset.max || '0', 10);
+      if(max && input.checked){
+        const checked = [...group.querySelectorAll('input:checked')];
+        if(checked.length > max){ input.checked = false; }
+      }
+      sync();
+    });
+    sync();
+  });
+}
+function readPersonForm(prefix){
+  const name = (document.getElementById(prefix+'-name').value || '').trim();
+  const identityEl = document.querySelector(`input[name="${prefix}-identity"]:checked`);
+  const identity = identityEl ? identityEl.value : null;
+  const lookingFor = [...document.querySelectorAll(`input[data-name="${prefix}-lookingfor"]:checked`)].map(i=>i.value);
+  const gradeEl = document.querySelector(`input[name="${prefix}-grade"]:checked`);
+  const grade = gradeEl ? gradeEl.value : null;
+  const gradeOpenTo = [...document.querySelectorAll(`input[data-name="${prefix}-gradeopento"]:checked`)].map(i=>i.value);
+  const ft = document.getElementById(prefix+'-height-ft').value;
+  const inch = document.getElementById(prefix+'-height-in').value;
+  const heightIn = (ft!=='' && inch!=='') ? (parseInt(ft,10)*12 + parseInt(inch,10)) : null;
+  const heightPref = [...document.querySelectorAll(`input[data-name="${prefix}-heightpref"]:checked`)].map(i=>i.value);
+  const interests = [...document.querySelectorAll(`input[data-name="${prefix}-interests"]:checked`)].map(i=>i.value);
+  const vibes = [...document.querySelectorAll(`input[data-name="${prefix}-vibes"]:checked`)].map(i=>i.value);
+  const dateTypes = [...document.querySelectorAll(`input[data-name="${prefix}-dateTypes"]:checked`)].map(i=>i.value);
+  const music = [...document.querySelectorAll(`input[data-name="${prefix}-music"]:checked`)].map(i=>i.value);
+  const activities = [...document.querySelectorAll(`input[data-name="${prefix}-activities"]:checked`)].map(i=>i.value);
+  const zodiac = document.getElementById(prefix+'-zodiac').value;
+  const bio = (document.getElementById(prefix+'-bio').value || '').trim();
+  return { name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, zodiac, bio };
+}
+function validatePerson(p){
+  if(!p.name) return 'Please enter a name.';
+  if(!p.identity) return 'Please choose an identity.';
+  if(!p.lookingFor.length) return 'Please choose at least one "open to matching with" option.';
+  if(!p.grade) return 'Please choose a grade.';
+  if(!p.gradeOpenTo.length) return 'Please choose at least one grade you\'re open to matching with.';
+  if(p.heightIn==null) return 'Please choose your height.';
+  if(!p.interests.length) return 'Please pick at least one interest.';
+  return null;
+}
+function fillPersonForm(prefix, p){
+  document.getElementById(prefix+'-name').value = p.name;
+  const idEl = document.querySelector(`input[name="${prefix}-identity"][value="${p.identity}"]`);
+  if(idEl) idEl.checked = true;
+  document.querySelectorAll(`input[data-name="${prefix}-lookingfor"]`).forEach(i => i.checked = p.lookingFor.includes(i.value));
+  const gradeEl = document.querySelector(`input[name="${prefix}-grade"][value="${p.grade}"]`);
+  if(gradeEl) gradeEl.checked = true;
+  document.querySelectorAll(`input[data-name="${prefix}-gradeopento"]`).forEach(i => i.checked = (p.gradeOpenTo||[]).includes(i.value));
+  document.getElementById(prefix+'-height-ft').value = p.heightIn!=null ? Math.floor(p.heightIn/12) : '';
+  document.getElementById(prefix+'-height-in').value = p.heightIn!=null ? (p.heightIn%12) : '';
+  document.querySelectorAll(`input[data-name="${prefix}-heightpref"]`).forEach(i => { i.checked = (p.heightPref||[]).includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
+  document.querySelectorAll(`input[data-name="${prefix}-interests"]`).forEach(i => { i.checked = p.interests.includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
+  document.querySelectorAll(`input[data-name="${prefix}-vibes"]`).forEach(i => { i.checked = p.vibes.includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
+  document.querySelectorAll(`input[data-name="${prefix}-dateTypes"]`).forEach(i => { i.checked = p.dateTypes.includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
+  document.querySelectorAll(`input[data-name="${prefix}-music"]`).forEach(i => { i.checked = p.music.includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
+  document.querySelectorAll(`input[data-name="${prefix}-activities"]`).forEach(i => { i.checked = (p.activities||[]).includes(i.value); i.closest('.chip').classList.toggle('checked', i.checked); });
+  document.getElementById(prefix+'-zodiac').value = p.zodiac || '';
+  document.getElementById(prefix+'-bio').value = p.bio || '';
+}
+function clearPersonForm(prefix){
+  document.getElementById(prefix+'-name').value = '';
+  document.querySelectorAll(`input[name="${prefix}-identity"]`).forEach(i=>i.checked=false);
+  document.querySelectorAll(`input[name="${prefix}-grade"]`).forEach(i=>i.checked=false);
+  document.getElementById(prefix+'-height-ft').value = '';
+  document.getElementById(prefix+'-height-in').value = '';
+  document.getElementById(prefix+'-zodiac').value = '';
+  document.querySelectorAll(`input[data-name^="${prefix}-"]`).forEach(i=>{ i.checked=false; if(i.closest('.chip')) i.closest('.chip').classList.remove('checked'); });
+  document.getElementById(prefix+'-bio').value = '';
+}
+
+// ---------- Join view ----------
+const joinContainer = document.getElementById('join-form-container');
+joinContainer.innerHTML = personFormHTML('join');
+wireChipHighlighting(joinContainer);
+function refreshJoinCount(){ document.getElementById('join-count').textContent = state.islanders.length + ' joined so far'; }
+refreshJoinCount();
+document.getElementById('join-submit').addEventListener('click', () => {
+  const p = readPersonForm('join');
+  const err = validatePerson(p);
+  const banner = document.getElementById('join-banner');
+  if(err){ banner.innerHTML = `<div class="banner err">${err}</div>`; return; }
+  p.id = uid(); p.source = 'self'; p.createdAt = Date.now();
+  state.islanders.push(p); save();
+  clearPersonForm('join');
+  banner.innerHTML = `<div class="banner ok">You're in the villa, ${escapeHtml(p.name)}! 💕 Wait for the mystery reveal.</div>`;
+  refreshJoinCount();
+});
+
+// ---------- Owner: roster form ----------
+const ownerContainer = document.getElementById('owner-form-container');
+ownerContainer.innerHTML = personFormHTML('owner');
+wireChipHighlighting(ownerContainer);
+let editingId = null;
+document.getElementById('owner-submit').addEventListener('click', () => {
+  const p = readPersonForm('owner');
+  const err = validatePerson(p);
+  const banner = document.getElementById('owner-form-banner');
+  if(err){ banner.innerHTML = `<div class="banner err">${err}</div>`; return; }
+  if(editingId){
+    const idx = state.islanders.findIndex(x=>x.id===editingId);
+    if(idx>-1) state.islanders[idx] = Object.assign(state.islanders[idx], p);
+    editingId = null;
+    document.getElementById('owner-submit').textContent = 'Add islander';
+    document.getElementById('owner-cancel-edit').style.display = 'none';
+    banner.innerHTML = `<div class="banner ok">Updated ${escapeHtml(p.name)}.</div>`;
+  } else {
+    p.id = uid(); p.source = 'owner'; p.createdAt = Date.now();
+    state.islanders.push(p);
+    banner.innerHTML = `<div class="banner ok">Added ${escapeHtml(p.name)}.</div>`;
+  }
+  save(); clearPersonForm('owner'); renderOwner();
+});
+document.getElementById('owner-cancel-edit').addEventListener('click', () => {
+  editingId = null; clearPersonForm('owner');
+  document.getElementById('owner-submit').textContent = 'Add islander';
+  document.getElementById('owner-cancel-edit').style.display = 'none';
+});
+
+function formatHeight(inches){
+  if(inches==null) return '—';
+  return `${Math.floor(inches/12)}'${inches%12}"`;
+}
+function renderRoster(){
+  const tbody = document.querySelector('#roster-table tbody');
+  tbody.innerHTML = '';
+  state.islanders.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(p.name)}</td>
+      <td>${GRADE_LABEL[p.grade]||'—'}</td>
+      <td>${IDENTITY_LABEL[p.identity]||'—'}</td>
+      <td>${p.lookingFor.map(l=>IDENTITY_LABEL[l==='guys'?'guy':l==='girls'?'girl':'other']).join(', ')}</td>
+      <td>${formatHeight(p.heightIn)}</td>
+      <td>${p.interests.map(t=>`<span class="tag-mini">${EMOJI.interests[t]||''} ${t}</span>`).join('')}</td>
+      <td>${p.vibes.map(t=>`<span class="tag-mini">${EMOJI.vibes[t]||''} ${t}</span>`).join('')}</td>
+      <td class="roster-actions">
+        <button class="btn ghost" data-edit="${p.id}">Edit</button>
+        <button class="btn danger" data-del="${p.id}">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('roster-count').textContent = state.islanders.length;
+  tbody.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => {
+    const p = state.islanders.find(x=>x.id===b.dataset.edit);
+    if(!p) return;
+    editingId = p.id;
+    fillPersonForm('owner', p);
+    document.getElementById('owner-submit').textContent = 'Save changes';
+    document.getElementById('owner-cancel-edit').style.display = '';
+    document.getElementById('owner-form-container').scrollIntoView({behavior:'smooth'});
+  }));
+  tbody.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
+    if(!confirm('Remove this islander?')) return;
+    const delId = b.dataset.del;
+    state.islanders = state.islanders.filter(x=>x.id!==delId);
+    state.lockedPairs = state.lockedPairs.filter(pair => pair[0]!==delId && pair[1]!==delId);
+    delete state.swipes[delId];
+    Object.values(state.swipes).forEach(targets => delete targets[delId]);
+    if(state.swipeAsId === delId) state.swipeAsId = null;
+    save(); renderOwner();
+  }));
+  refreshJoinCount();
+}
+
+// ---------- Bulk import ----------
+function normalizeTagList(str, allowed){
+  if(!str) return [];
+  return str.split(',').map(s=>s.trim()).filter(Boolean).map(s => {
+    const match = allowed.find(a => a.toLowerCase() === s.toLowerCase());
+    return match || s;
+  });
+}
+function parseHeight(str){
+  if(!str) return null;
+  const m = str.match(/(\d)\s*'?\s*(\d{1,2})?/);
+  if(!m) return null;
+  const ft = parseInt(m[1],10);
+  const inch = m[2]!=null ? parseInt(m[2],10) : 0;
+  if(isNaN(ft) || isNaN(inch) || inch>11) return null;
+  return ft*12 + inch;
+}
+document.getElementById('bulk-submit').addEventListener('click', () => {
+  const raw = document.getElementById('bulk-input').value;
+  const lines = raw.split('\n').map(l=>l.trim()).filter(l => l && !l.startsWith('#'));
+  let added = 0; const problems = [];
+  lines.forEach((line, i) => {
+    const parts = line.split('|').map(s=>s.trim());
+    if(parts.length < 13){ problems.push(`Line ${i+1}: expected 13-14 fields, got ${parts.length}.`); return; }
+    const [name, identityRaw, lookingRaw, gradeRaw, gradeOpenRaw, heightRaw, heightPrefRaw, interestsRaw, vibesRaw, dateRaw, musicRaw, activitiesRaw, zodiacRaw, bio] = parts;
+    if(!name){ problems.push(`Line ${i+1}: missing name.`); return; }
+    const identity = ['guy','girl','other'].includes(identityRaw.toLowerCase()) ? identityRaw.toLowerCase() : 'other';
+    let lookingFor = lookingRaw.split(',').map(s=>s.trim().toLowerCase()).filter(s=>['guys','girls','other'].includes(s));
+    if(!lookingFor.length){ lookingFor = ['guys','girls','other']; problems.push(`Line ${i+1} (${name}): no valid "open to" values, defaulted to everyone.`); }
+    const grade = GRADES.includes(gradeRaw.trim()) ? gradeRaw.trim() : null;
+    if(!grade) problems.push(`Line ${i+1} (${name}): grade "${gradeRaw}" not recognized (use 9, 10, 11, or 12).`);
+    let gradeOpenTo = gradeOpenRaw.split(',').map(s=>s.trim()).filter(s=>GRADES.includes(s));
+    if(!gradeOpenTo.length){ gradeOpenTo = GRADES.slice(); problems.push(`Line ${i+1} (${name}): no valid "open to grades" values, defaulted to all grades.`); }
+    const heightIn = parseHeight(heightRaw);
+    if(heightIn==null) problems.push(`Line ${i+1} (${name}): height "${heightRaw}" not recognized (use e.g. 5'6").`);
+    const heightPref = normalizeTagList(heightPrefRaw, HEIGHT_PREF);
+    const interests = normalizeTagList(interestsRaw, TAGS.interests);
+    const vibes = normalizeTagList(vibesRaw, TAGS.vibes).slice(0,3);
+    const dateTypes = normalizeTagList(dateRaw, TAGS.dateTypes).slice(0,3);
+    const music = normalizeTagList(musicRaw, TAGS.music);
+    const activities = normalizeTagList(activitiesRaw, TAGS.activities);
+    const zodiac = ZODIAC.find(z => z.toLowerCase() === (zodiacRaw||'').trim().toLowerCase()) || '';
+    if(!interests.length){ problems.push(`Line ${i+1} (${name}): no interests found.`); }
+    state.islanders.push({ id: uid(), name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, zodiac, bio: (bio||'').trim(), source:'owner-bulk', createdAt: Date.now() });
+    added++;
+  });
+  save(); renderOwner();
+  const banner = document.getElementById('bulk-banner');
+  let html = `<div class="banner ${added?'ok':'err'}">Imported ${added} islander(s).</div>`;
+  if(problems.length) html += `<div class="banner err">${problems.map(escapeHtml).join('<br>')}</div>`;
+  banner.innerHTML = html;
+  if(added) document.getElementById('bulk-input').value = '';
+});
+
+// ---------- Locked pairs ----------
+function renderLockUI(){
+  const a = document.getElementById('lock-a'), b = document.getElementById('lock-b');
+  const opts = state.islanders.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  a.innerHTML = `<option value="">Choose islander…</option>` + opts;
+  b.innerHTML = `<option value="">Choose islander…</option>` + opts;
+  const list = document.getElementById('locked-list');
+  list.innerHTML = '';
+  state.lockedPairs.forEach((pair, idx) => {
+    const pa = state.islanders.find(x=>x.id===pair[0]);
+    const pb = state.islanders.find(x=>x.id===pair[1]);
+    const li = document.createElement('li');
+    li.innerHTML = `${escapeHtml(pa?pa.name:'?')} × ${escapeHtml(pb?pb.name:'?')} <button class="btn ghost" data-unlock="${idx}" style="padding:2px 8px; font-size:.7rem">remove</button>`;
+    list.appendChild(li);
+  });
+  list.querySelectorAll('[data-unlock]').forEach(btn => btn.addEventListener('click', () => {
+    state.lockedPairs.splice(parseInt(btn.dataset.unlock,10),1); save(); renderLockUI();
+  }));
+}
+document.getElementById('lock-add').addEventListener('click', () => {
+  const a = document.getElementById('lock-a').value, b = document.getElementById('lock-b').value;
+  const banner = document.getElementById('match-banner');
+  if(!a || !b || a===b){ banner.innerHTML = '<div class="banner err">Pick two different islanders.</div>'; return; }
+  const already = state.lockedPairs.some(pair => pair.includes(a) || pair.includes(b));
+  if(already){ banner.innerHTML = '<div class="banner err">One of these islanders is already locked into a couple.</div>'; return; }
+  state.lockedPairs.push([a,b]); save(); renderLockUI();
+  banner.innerHTML = '';
+});
+
+// ---------- Matching ----------
+function bucketOf(p){ return p.identity === 'guy' ? 'guys' : p.identity === 'girl' ? 'girls' : 'other'; }
+function eligible(a,b){
+  if(a.id===b.id) return false;
+  if(!(a.lookingFor.includes(bucketOf(b)) && b.lookingFor.includes(bucketOf(a)))) return false;
+  if(a.grade && b.grade && !((a.gradeOpenTo||[]).includes(b.grade) && (b.gradeOpenTo||[]).includes(a.grade))) return false;
+  return true;
+}
+function overlap(a,b){ return a.filter(x => b.includes(x)); }
+function heightPrefSatisfied(prefs, selfIn, otherIn){
+  if(!prefs || !prefs.length || selfIn==null || otherIn==null) return true;
+  return prefs.some(pref => {
+    if(pref==='Taller than me') return otherIn > selfIn;
+    if(pref==='Shorter than me') return otherIn < selfIn;
+    if(pref==='About the same height') return Math.abs(otherIn - selfIn) <= 2;
+    return true; // 'No preference'
+  });
+}
+function heightCompat(a,b){
+  if(a.heightIn==null || b.heightIn==null) return null;
+  const aSatisfied = heightPrefSatisfied(a.heightPref, a.heightIn, b.heightIn);
+  const bSatisfied = heightPrefSatisfied(b.heightPref, b.heightIn, a.heightIn);
+  if(aSatisfied && bSatisfied) return 'mutual';
+  if(aSatisfied || bSatisfied) return 'partial';
+  return 'none';
+}
+function computeScore(a,b){
+  const shared = {
+    interests: overlap(a.interests,b.interests),
+    vibes: overlap(a.vibes,b.vibes),
+    dateTypes: overlap(a.dateTypes,b.dateTypes),
+    music: overlap(a.music,b.music),
+    activities: overlap(a.activities||[],b.activities||[]),
+    sameGrade: !!(a.grade && b.grade && a.grade===b.grade),
+    heightCompat: heightCompat(a,b)
+  };
+  let score = shared.interests.length*WEIGHTS.interests + shared.vibes.length*WEIGHTS.vibes +
+    shared.dateTypes.length*WEIGHTS.dateTypes + shared.music.length*WEIGHTS.music +
+    shared.activities.length*WEIGHTS.activities;
+  if(shared.heightCompat==='mutual') score += HEIGHT_BONUS.mutual;
+  else if(shared.heightCompat==='partial') score += HEIGHT_BONUS.partial;
+  return { score, shared };
+}
+function lockedResults(){
+  return state.lockedPairs.map(pair => {
+    const a = state.islanders.find(x=>x.id===pair[0]), b = state.islanders.find(x=>x.id===pair[1]);
+    const { shared } = computeScore(a,b);
+    return { a, b, shared, mode:'locked' };
+  });
+}
+function greedyPair(pool, candidates, mode){
+  const results = lockedResults();
+  candidates.sort((x,y) => y.score - x.score);
+  const matched = new Set();
+  candidates.forEach(c => {
+    if(matched.has(c.a.id) || matched.has(c.b.id)) return;
+    matched.add(c.a.id); matched.add(c.b.id);
+    results.push({ a:c.a, b:c.b, shared:c.shared, mode });
+  });
+  const leftover = pool.filter(p => !matched.has(p.id));
+  return { results, leftover };
+}
+function generateMatchesScoreMode(){
+  const lockedIds = new Set(state.lockedPairs.flat());
+  const pool = state.islanders.filter(p => !lockedIds.has(p.id));
+  const candidates = [];
+  for(let i=0;i<pool.length;i++){
+    for(let j=i+1;j<pool.length;j++){
+      const a = pool[i], b = pool[j];
+      if(!eligible(a,b)) continue;
+      const { score, shared } = computeScore(a,b);
+      candidates.push({ a, b, shared, score: score + Math.random()*0.75 });
+    }
+  }
+  return greedyPair(pool, candidates, 'score');
+}
+function mutualPairs(pool){
+  const candidates = [];
+  for(let i=0;i<pool.length;i++){
+    for(let j=i+1;j<pool.length;j++){
+      const a = pool[i], b = pool[j];
+      if(!eligible(a,b)) continue;
+      const aLikesB = state.swipes[a.id] && state.swipes[a.id][b.id] === true;
+      const bLikesA = state.swipes[b.id] && state.swipes[b.id][a.id] === true;
+      if(!aLikesB || !bLikesA) continue;
+      const { score, shared } = computeScore(a,b);
+      candidates.push({ a, b, shared, score: score + Math.random()*0.75 });
+    }
+  }
+  return candidates;
+}
+function generateMatchesSwipeMode(){
+  const lockedIds = new Set(state.lockedPairs.flat());
+  const pool = state.islanders.filter(p => !lockedIds.has(p.id));
+  return greedyPair(pool, mutualPairs(pool), 'swipe');
+}
+function generateMatches(){
+  return state.matchMode === 'swipe' ? generateMatchesSwipeMode() : generateMatchesScoreMode();
+}
+document.querySelectorAll('input[name="match-mode"]').forEach(r => r.addEventListener('change', () => {
+  if(r.checked){ state.matchMode = r.value; save(); }
+}));
+document.getElementById('gen-matches').addEventListener('click', () => {
+  const banner = document.getElementById('match-banner');
+  if(state.islanders.length < 2){ banner.innerHTML = '<div class="banner err">Need at least 2 islanders to match.</div>'; return; }
+  if(state.matchMode === 'swipe'){
+    const lockedIds = new Set(state.lockedPairs.flat());
+    const pool = state.islanders.filter(p => !lockedIds.has(p.id));
+    if(!mutualPairs(pool).length){ banner.innerHTML = '<div class="banner err">No mutual swipe matches yet — have islanders swipe on each other in the Swipe tab first.</div>'; return; }
+  }
+  const { results, leftover } = generateMatches();
+  state.results = { pairs: results.map(r => ({ aId:r.a.id, bId:r.b.id, shared:r.shared, mode:r.mode })), leftoverIds: leftover.map(p=>p.id) };
+  state.revealIndex = 0; state.revealFlipped = false;
+  save();
+  banner.innerHTML = `<div class="banner ok">Matched ${results.length} couple(s)${leftover.length ? `, ${leftover.length} still waiting for a spark` : ''}.</div>`;
+  renderResults();
+});
+function sharedSummary(shared){
+  const bits = [];
+  ['interests','vibes','dateTypes','music','activities'].forEach(k => {
+    (shared[k]||[]).forEach(t => bits.push(`${EMOJI[k][t]||''} ${t}`));
+  });
+  if(shared.sameGrade) bits.push('🎓 same grade');
+  if(shared.heightCompat==='mutual') bits.push('📏 height match');
+  return bits.length ? bits.join(', ') : 'a mystery spark ✨';
+}
+const MODE_BADGE = { locked:'💫 teacher pick', swipe:'🔥 mutual swipe match', score:'✨ villa pick' };
+function renderResults(){
+  const card = document.getElementById('results-card');
+  const list = document.getElementById('results-list');
+  if(!state.results){ card.style.display='none'; return; }
+  card.style.display='';
+  const rows = state.results.pairs.map(pr => {
+    const a = state.islanders.find(x=>x.id===pr.aId), b = state.islanders.find(x=>x.id===pr.bId);
+    if(!a||!b) return '';
+    return `<div class="banner ok" style="text-align:left">
+      <strong>${escapeHtml(a.name)}</strong> × <strong>${escapeHtml(b.name)}</strong> ${MODE_BADGE[pr.mode]||''}
+      <div class="muted">Shared: ${sharedSummary(pr.shared)}</div>
+    </div>`;
+  }).join('');
+  const leftoverNames = state.results.leftoverIds.map(id => state.islanders.find(x=>x.id===id)).filter(Boolean).map(p=>escapeHtml(p.name));
+  list.innerHTML = rows + (leftoverNames.length ? `<p class="leftover">Still finding their spark: ${leftoverNames.join(', ')}</p>` : '');
+}
+
+document.getElementById('reset-all').addEventListener('click', () => {
+  if(!confirm('This deletes the entire roster, locked pairs, swipes, and results (passcode and matching mode stay). Continue?')) return;
+  state.islanders = []; state.lockedPairs = []; state.results = null; state.revealIndex = 0; state.revealFlipped = false;
+  state.swipes = {}; state.swipeAsId = null;
+  save(); renderOwner();
+});
+
+// ---------- CSV export ----------
+function downloadCSV(filename, rows){
+  const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+document.getElementById('export-roster').addEventListener('click', () => {
+  const rows = [['Name','Grade','Open to grades','Identity','Open to','Height','Height Preference','Interests','Vibe','Date Ideas','Music','Activities/Clubs','Zodiac','Mystery Clue']];
+  state.islanders.forEach(p => rows.push([
+    p.name, GRADE_LABEL[p.grade]||'', (p.gradeOpenTo||[]).map(g=>GRADE_LABEL[g]).join(', '),
+    IDENTITY_LABEL[p.identity], p.lookingFor.join(', '), formatHeight(p.heightIn), (p.heightPref||[]).join(', '),
+    p.interests.join(', '), p.vibes.join(', '), p.dateTypes.join(', '), p.music.join(', '),
+    (p.activities||[]).join(', '), p.zodiac||'', p.bio
+  ]));
+  downloadCSV('villa-roster.csv', rows);
+});
+document.getElementById('export-matches').addEventListener('click', () => {
+  if(!state.results){ alert('Generate matches first.'); return; }
+  const rows = [['Islander A','Islander B','Match type','Shared traits']];
+  state.results.pairs.forEach(pr => {
+    const a = state.islanders.find(x=>x.id===pr.aId), b = state.islanders.find(x=>x.id===pr.bId);
+    rows.push([a?a.name:'?', b?b.name:'?', pr.mode||'score', sharedSummary(pr.shared)]);
+  });
+  downloadCSV('villa-matches.csv', rows);
+});
+
+// ---------- Reveal ----------
+document.getElementById('start-reveal').addEventListener('click', () => { state.revealIndex = 0; state.revealFlipped = false; save(); renderReveal(); showView('reveal'); });
+document.getElementById('reveal-exit').addEventListener('click', () => { showView('owner'); });
+document.getElementById('reveal-flip').addEventListener('click', () => { state.revealFlipped = true; save(); renderReveal(); });
+document.getElementById('reveal-prev').addEventListener('click', () => {
+  if(state.revealIndex>0){ state.revealIndex--; state.revealFlipped=false; save(); renderReveal(); }
+});
+document.getElementById('reveal-next').addEventListener('click', () => {
+  if(state.results && state.revealIndex < state.results.pairs.length-1){ state.revealIndex++; state.revealFlipped=false; save(); renderReveal(); }
+});
+function renderReveal(){
+  const el = document.getElementById('reveal-card');
+  if(!state.results || !state.results.pairs.length){ el.innerHTML = '<p>No matches generated yet.</p>'; return; }
+  const pr = state.results.pairs[state.revealIndex];
+  const a = state.islanders.find(x=>x.id===pr.aId), b = state.islanders.find(x=>x.id===pr.bId);
+  document.getElementById('reveal-progress').textContent = `Couple ${state.revealIndex+1} of ${state.results.pairs.length}`;
+  document.getElementById('reveal-flip').disabled = state.revealFlipped;
+  document.getElementById('reveal-prev').disabled = state.revealIndex===0;
+  document.getElementById('reveal-next').disabled = state.revealIndex===state.results.pairs.length-1;
+  if(!state.revealFlipped){
+    el.innerHTML = `
+      <div style="font-size:1.1rem">🕵️‍♀️ Mystery Clues 🕵️‍♂️</div>
+      <div class="clue">"${escapeHtml(a.bio) || 'No clue given…'}"</div>
+      <div style="font-size:1.4rem">💘</div>
+      <div class="clue">"${escapeHtml(b.bio) || 'No clue given…'}"</div>
+      <p class="muted">Who could these two be?</p>`;
+  } else {
+    el.innerHTML = `
+      <div class="couple-names">${escapeHtml(a.name)} <span class="x">💕</span> ${escapeHtml(b.name)}</div>
+      <div>${MODE_BADGE[pr.mode]||''}</div>
+      <div class="why">Matched on: ${sharedSummary(pr.shared)}</div>`;
+  }
+}
+
+// ---------- Swipe view ----------
+function renderSwipe(){
+  const who = document.getElementById('swipe-who');
+  const currentVal = state.swipeAsId || '';
+  who.innerHTML = `<option value="">Choose your name…</option>` +
+    state.islanders.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  who.value = state.islanders.some(p=>p.id===currentVal) ? currentVal : '';
+  renderSwipeCard();
+}
+document.getElementById('swipe-who').addEventListener('change', (e) => {
+  state.swipeAsId = e.target.value || null;
+  save(); renderSwipeCard();
+});
+function swipeCandidates(swiperId){
+  const me = state.islanders.find(p=>p.id===swiperId);
+  if(!me) return [];
+  const seen = state.swipes[swiperId] || {};
+  return state.islanders.filter(p => p.id!==me.id && eligible(me,p) && !(p.id in seen));
+}
+function renderSwipeCard(){
+  const area = document.getElementById('swipe-area');
+  const swiperId = state.swipeAsId;
+  if(!swiperId){ area.innerHTML = '<p class="muted">Pick your name above to start swiping.</p>'; return; }
+  const me = state.islanders.find(p=>p.id===swiperId);
+  const total = state.islanders.filter(p => p.id!==swiperId && eligible(me,p)).length;
+  const remaining = swipeCandidates(swiperId);
+  const reviewed = total - remaining.length;
+  if(!remaining.length){
+    area.innerHTML = `<div class="swipe-card"><h4>You're all caught up! 🌴</h4><p class="muted">Reviewed ${reviewed} of ${total} eligible islanders. Check back after your teacher adds more people.</p></div>`;
+    return;
+  }
+  const target = remaining[0];
+  area.innerHTML = `
+    <div class="swipe-progress">Reviewed ${reviewed} of ${total}</div>
+    <div class="swipe-card">
+      <h4>🕵️ Mystery Islander</h4>
+      <span class="tag-mini">🎓 ${GRADE_LABEL[target.grade]||'—'}</span>
+      <span class="tag-mini">📏 ${formatHeight(target.heightIn)}</span>
+      ${target.zodiac ? `<span class="tag-mini">${ZODIAC_EMOJI[target.zodiac]||''} ${target.zodiac}</span>` : ''}
+      ${target.interests.map(t=>`<span class="tag-mini">${EMOJI.interests[t]||''} ${t}</span>`).join('')}
+      ${target.vibes.map(t=>`<span class="tag-mini">${EMOJI.vibes[t]||''} ${t}</span>`).join('')}
+      ${target.dateTypes.map(t=>`<span class="tag-mini">${EMOJI.dateTypes[t]||''} ${t}</span>`).join('')}
+      ${target.music.map(t=>`<span class="tag-mini">${EMOJI.music[t]||''} ${t}</span>`).join('')}
+      ${(target.activities||[]).map(t=>`<span class="tag-mini">${EMOJI.activities[t]||''} ${t}</span>`).join('')}
+      <div class="swipe-bio">"${escapeHtml(target.bio) || 'No mystery clue given…'}"</div>
+      <div class="swipe-actions">
+        <button class="swipe-pass" data-swipe="pass" data-target="${target.id}" title="Pass">✖</button>
+        <button class="swipe-like" data-swipe="like" data-target="${target.id}" title="Like">❤</button>
+      </div>
+    </div>`;
+  area.querySelectorAll('[data-swipe]').forEach(btn => btn.addEventListener('click', () => {
+    const targetId = btn.dataset.target;
+    state.swipes[swiperId] = state.swipes[swiperId] || {};
+    state.swipes[swiperId][targetId] = btn.dataset.swipe === 'like';
+    save();
+    renderSwipeCard();
+  }));
+}
+
+// ---------- Owner render ----------
+function renderSwipeStats(){
+  const el = document.getElementById('swipe-stats');
+  if(!el) return;
+  const swiped = Object.keys(state.swipes).filter(id => Object.keys(state.swipes[id]).length).length;
+  const lockedIds = new Set(state.lockedPairs.flat());
+  const pool = state.islanders.filter(p => !lockedIds.has(p.id));
+  const mutual = mutualPairs(pool).length;
+  el.textContent = `${swiped} of ${state.islanders.length} islanders have started swiping · ${mutual} mutual match(es) available right now.`;
+  document.querySelectorAll('input[name="match-mode"]').forEach(r => { r.checked = (r.value === state.matchMode); });
+}
+function renderOwner(){
+  renderRoster();
+  renderLockUI();
+  renderResults();
+  renderSwipeStats();
+}
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- init ----------
+refreshJoinCount();
+</script>
+</body>
+</html>
