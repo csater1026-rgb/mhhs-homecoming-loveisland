@@ -3,8 +3,14 @@
 A Love Island-style mystery homecoming date matcher for MHHS. Students enter their
 preferences, a teacher runs the matching, and results are revealed mystery-style.
 
-Single self-contained page (`index.html`) — all HTML/CSS/JS inline, no dependencies,
-no build step, no server. Data lives entirely in the browser's `localStorage`.
+Static site (`index.html` + `styles.css` + `app.js`) — no dependencies, no build
+step, no server. Data lives entirely in the browser's `localStorage`.
+
+`vercel.json` sends a strict `Content-Security-Policy` (no `unsafe-inline` or
+`unsafe-eval`) along with the usual hardening headers (HSTS, `X-Frame-Options`,
+etc.), which is why CSS and JS live in their own files instead of inline
+`<style>`/`<script>` blocks — inline code can't be exempted from that policy
+without weakening it.
 
 ## Features
 
