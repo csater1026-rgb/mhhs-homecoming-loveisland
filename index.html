@@ -139,7 +139,7 @@
   <section id="view-join" class="view active">
     <div class="card">
       <h2>Enter the Villa 🏝️</h2>
-      <p class="muted">Fill this out once. Your teacher will run the mystery matching after everyone's in — your <strong>Mystery Clue</strong> gets shown before your name during the reveal. Everything stays saved only on this device/browser.</p>
+      <p class="muted">Fill this out once. Your teacher will run the mystery matching after everyone's in — your <strong>Dream Match</strong> description gets shown before your name during the reveal. Everything stays saved only on this device/browser.</p>
       <div id="join-form-container"></div>
       <div class="row" style="margin-top:16px">
         <button class="btn primary" id="join-submit">Join the Villa 💌</button>
@@ -209,8 +209,8 @@
     <div class="card">
       <h3 style="margin-top:0">Bulk import ("scan the stack in")</h3>
       <p class="muted">Paste one islander per line, fields separated by <code>|</code>. Great for quickly transcribing a stack of scanned/paper forms at once.</p>
-      <code class="tmpl">Name | Identity(guy/girl) | Open to(guys,girls) | Grade(9/10/11/12) | Open to grades(comma list of 9,10,11,12) | Height(5'0" to 6'4", or 6'5"+ for taller) | Height pref(comma: Taller than me,Shorter than me,About the same height,No preference) | Interests(comma list, any text works) | Vibe words(comma list, any text works) | Date ideas(comma list, any text works) | Music(comma list, any text works) | Activities/clubs(comma list, any text works) | Social style(Life of the party/Balanced/Homebody, optional) | Texting style(Big texter/Prefers calling/Better in person, optional) | Love language(Words of Affirmation/Quality Time/Acts of Service/Gifts/Physical Touch, optional) | What matters most(comma list, up to 2, any text works, optional) | Mystery clue(optional)
-Jordan Lee | girl | guys | 11 | 10,11,12 | 5'6" | About the same height | Music,Gaming,Homemade Ramen | Funny | Movie Night,Stargazing on the roof | Rihanna - Diamonds | Band/Choir/Orchestra,Honor Society | Balanced | Big texter | Quality Time | Good conversation,Good energy | Once tried to teach a cat to skateboard.</code>
+      <code class="tmpl">Name | Identity(guy/girl) | Open to(guys,girls) | Grade(9/10/11/12) | Open to grades(comma list of 9,10,11,12) | Height(5'0" to 6'4", or 6'5"+ for taller) | Height pref(comma: Taller than me,Shorter than me,About the same height,No preference) | Interests(comma list, any text works) | Vibe words(comma list, any text works) | Date ideas(comma list, any text works) | Music(comma list, any text works) | Activities/clubs(comma list, any text works) | Texting style(Big texter/Prefers calling/Better in person, optional) | Dream match(optional)
+Jordan Lee | girl | guys | 11 | 10,11,12 | 5'6" | About the same height | Music,Gaming,Homemade Ramen | Funny | Movie Night,Stargazing on the roof | Rihanna - Diamonds | Band/Choir/Orchestra,Honor Society | Big texter | Funny, confident, and up for anything.</code>
       <label class="field"><span>Paste rows here</span><textarea id="bulk-input" rows="6" placeholder="Paste scanned/transcribed rows here…"></textarea></label>
       <div class="row"><button class="btn" id="bulk-submit">Import rows</button></div>
       <div id="bulk-banner"></div>
@@ -295,16 +295,14 @@ const TAGS = {
   vibes: ['Funny','Chill','Adventurous','Romantic','Mysterious','Sweet','Confident'],
   dateTypes: ['Fancy Dinner','Arcade/Games','Movie Night','Outdoor Adventure','Chill Hangout','Dancing'],
   music: ['Pop','Hip-Hop/Rap','Country','Rock','EDM/Dance','R&B/Soul'],
-  activities: ['Varsity/JV Sports','Band/Choir/Orchestra','Drama/Theater','Student Government','Honor Society','FFA/4-H','Art Club','Part-time Job'],
-  whatMatters: ['Good conversation','No pressure, just fun','Someone who puts in effort','Shared interests','Good energy']
+  activities: ['Varsity/JV Sports','Band/Choir/Orchestra','Drama/Theater','Student Government','Honor Society','FFA/4-H','Art Club','Part-time Job']
 };
 const EMOJI = {
   interests:{'Sports':'⚽','Music':'🎵','Gaming':'🎮','Art':'🎨','Movies & TV':'🎬','Outdoors':'🌲','Cooking':'🍳','Reading':'📚','Fashion':'👗','Fitness':'🏋️','Dance':'💃','Tech':'💻'},
   vibes:{'Funny':'😂','Chill':'😌','Adventurous':'🧗','Romantic':'🌹','Mysterious':'🕵️','Sweet':'🍯','Confident':'😎'},
   dateTypes:{'Fancy Dinner':'🍽️','Arcade/Games':'🕹️','Movie Night':'🎥','Outdoor Adventure':'🏕️','Chill Hangout':'🛋️','Dancing':'💃'},
   music:{'Pop':'🎤','Hip-Hop/Rap':'🎧','Country':'🤠','Rock':'🎸','EDM/Dance':'🪩','R&B/Soul':'🎶'},
-  activities:{'Varsity/JV Sports':'🏅','Band/Choir/Orchestra':'🎺','Drama/Theater':'🎭','Student Government':'🏛️','Honor Society':'🎓','FFA/4-H':'🌾','Art Club':'🖌️','Part-time Job':'💼'},
-  whatMatters:{'Good conversation':'💬','No pressure, just fun':'😌','Someone who puts in effort':'🌹','Shared interests':'🤝','Good energy':'✨'}
+  activities:{'Varsity/JV Sports':'🏅','Band/Choir/Orchestra':'🎺','Drama/Theater':'🎭','Student Government':'🏛️','Honor Society':'🎓','FFA/4-H':'🌾','Art Club':'🖌️','Part-time Job':'💼'}
 };
 const IDENTITY_LABEL = {guy:'Guy', girl:'Girl'};
 const GRADES = ['9','10','11','12'];
@@ -313,17 +311,13 @@ const HEIGHT_PREF = ['Taller than me','Shorter than me','About the same height',
 const HEIGHT_OPTIONS = [];
 for(let inches=60; inches<=76; inches++){ HEIGHT_OPTIONS.push({ value: inches, label: `${Math.floor(inches/12)}'${inches%12}"` }); }
 HEIGHT_OPTIONS.push({ value: 77, label: `6'5"+` });
-const SOCIAL_STYLE = ['Life of the party','Balanced','Homebody'];
-const SOCIAL_STYLE_EMOJI = {'Life of the party':'🎉','Balanced':'⚖️','Homebody':'🛋️'};
 const COMM_STYLE = ['Big texter','Prefers calling','Better in person'];
 const COMM_STYLE_EMOJI = {'Big texter':'📱','Prefers calling':'📞','Better in person':'🧑‍🤝‍🧑'};
-const LOVE_LANGUAGE = ['Words of Affirmation','Quality Time','Acts of Service','Gifts','Physical Touch'];
-const LOVE_LANGUAGE_EMOJI = {'Words of Affirmation':'💬','Quality Time':'⏳','Acts of Service':'🛠️','Gifts':'🎁','Physical Touch':'🤗'};
 // Category weights apply to a 0-1 overlap-coefficient similarity (see similarity()),
 // so a category with more checkbox options never scores higher just by chance.
-const WEIGHTS = {interests:3, vibes:2.5, dateTypes:2, music:1.5, activities:2, whatMatters:2.5, sameGrade:1};
+const WEIGHTS = {interests:3, vibes:2.5, dateTypes:2, music:1.5, activities:2, sameGrade:1};
 const HEIGHT_BONUS = {mutual:2, partial:0.8};
-const PERSONALITY_BONUS = {social:1.2, comm:0.8, loveLanguage:1.2};
+const PERSONALITY_BONUS = {comm:0.8};
 
 function uid(){ return 'p_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
@@ -391,7 +385,7 @@ document.getElementById('owner-change-pass').addEventListener('click', () => {
 const OTHER_PLACEHOLDER = {
   interests: 'Type your own interest…', vibes: 'Type your own word…',
   dateTypes: 'Describe your dream date…', music: 'Your favorite song or artist…',
-  activities: 'Type your own activity/club…', whatMatters: 'Type your own…'
+  activities: 'Type your own activity/club…'
 };
 function tagEmoji(groupKey, t){ return (EMOJI[groupKey] && EMOJI[groupKey][t]) ? EMOJI[groupKey][t] : '⭐'; }
 function chipGroup(prefix, groupKey, max){
@@ -473,28 +467,17 @@ function personFormHTML(prefix){
     <div class="step" data-step="5">
       <h4>Personality &amp; Values</h4>
       <p class="muted" style="margin-top:0">A little deeper than the basics — this feeds into your match too.</p>
-      <label class="field"><span>Your social battery</span>
-        <div class="radio-row">
-          ${SOCIAL_STYLE.map(s => `<label><input type="radio" name="${prefix}-social" value="${s}"> ${SOCIAL_STYLE_EMOJI[s]} ${s}</label>`).join('')}
-        </div>
-      </label>
       <label class="field"><span>Texting/calling style</span>
         <div class="radio-row">
           ${COMM_STYLE.map(s => `<label><input type="radio" name="${prefix}-comm" value="${s}"> ${COMM_STYLE_EMOJI[s]} ${s}</label>`).join('')}
         </div>
       </label>
-      <label class="field"><span>Your love language</span>
-        <div class="radio-row">
-          ${LOVE_LANGUAGE.map(s => `<label><input type="radio" name="${prefix}-lovelang" value="${s}"> ${LOVE_LANGUAGE_EMOJI[s]} ${s}</label>`).join('')}
-        </div>
-      </label>
-      <label class="field"><span>What matters most on a date</span>${chipGroup(prefix,'whatMatters',2)}</label>
       ${stepNav(5)}
     </div>
     <div class="step" data-step="6">
       <h4>Last Thing</h4>
-      <label class="field"><span>Mystery clue (optional)</span>
-        <textarea id="${prefix}-bio" maxlength="140" placeholder="A fun hint about you…"></textarea>
+      <label class="field"><span>Your dream match (optional)</span>
+        <textarea id="${prefix}-bio" maxlength="140" placeholder="Describe your ideal person…"></textarea>
       </label>
       ${stepNav(6)}
     </div>
@@ -585,15 +568,10 @@ function readPersonForm(prefix){
   const dateTypes = resolveOther(prefix,'dateTypes', [...document.querySelectorAll(`input[data-name="${prefix}-dateTypes"]:checked`)].map(i=>i.value));
   const music = resolveOther(prefix,'music', [...document.querySelectorAll(`input[data-name="${prefix}-music"]:checked`)].map(i=>i.value));
   const activities = resolveOther(prefix,'activities', [...document.querySelectorAll(`input[data-name="${prefix}-activities"]:checked`)].map(i=>i.value));
-  const socialEl = document.querySelector(`input[name="${prefix}-social"]:checked`);
-  const social = socialEl ? socialEl.value : null;
   const commEl = document.querySelector(`input[name="${prefix}-comm"]:checked`);
   const comm = commEl ? commEl.value : null;
-  const loveLangEl = document.querySelector(`input[name="${prefix}-lovelang"]:checked`);
-  const loveLanguage = loveLangEl ? loveLangEl.value : null;
-  const whatMatters = resolveOther(prefix,'whatMatters', [...document.querySelectorAll(`input[data-name="${prefix}-whatMatters"]:checked`)].map(i=>i.value));
   const bio = (document.getElementById(prefix+'-bio').value || '').trim();
-  return { name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, social, comm, loveLanguage, whatMatters, bio };
+  return { name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, comm, bio };
 }
 function validatePerson(p){
   if(!p.name) return 'Please enter a name.';
@@ -620,25 +598,18 @@ function fillPersonForm(prefix, p){
   fillChipGroupWithOther(prefix, 'dateTypes', p.dateTypes);
   fillChipGroupWithOther(prefix, 'music', p.music);
   fillChipGroupWithOther(prefix, 'activities', p.activities);
-  const socialEl = document.querySelector(`input[name="${prefix}-social"][value="${p.social}"]`);
-  if(socialEl) socialEl.checked = true;
   const commEl = document.querySelector(`input[name="${prefix}-comm"][value="${p.comm}"]`);
   if(commEl) commEl.checked = true;
-  const loveLangEl = document.querySelector(`input[name="${prefix}-lovelang"][value="${p.loveLanguage}"]`);
-  if(loveLangEl) loveLangEl.checked = true;
-  fillChipGroupWithOther(prefix, 'whatMatters', p.whatMatters);
   document.getElementById(prefix+'-bio').value = p.bio || '';
 }
 function clearPersonForm(prefix){
   document.getElementById(prefix+'-name').value = '';
   document.querySelectorAll(`input[name="${prefix}-identity"]`).forEach(i=>i.checked=false);
   document.querySelectorAll(`input[name="${prefix}-grade"]`).forEach(i=>i.checked=false);
-  document.querySelectorAll(`input[name="${prefix}-social"]`).forEach(i=>i.checked=false);
   document.querySelectorAll(`input[name="${prefix}-comm"]`).forEach(i=>i.checked=false);
-  document.querySelectorAll(`input[name="${prefix}-lovelang"]`).forEach(i=>i.checked=false);
   document.getElementById(prefix+'-height').value = '';
   document.querySelectorAll(`input[data-name^="${prefix}-"]`).forEach(i=>{ i.checked=false; if(i.closest('.chip')) i.closest('.chip').classList.remove('checked'); });
-  ['interests','vibes','dateTypes','music','activities','whatMatters'].forEach(g => {
+  ['interests','vibes','dateTypes','music','activities'].forEach(g => {
     const el = document.getElementById(`${prefix}-${g}-other`);
     if(el){ el.value=''; el.style.display='none'; }
   });
@@ -767,8 +738,8 @@ document.getElementById('bulk-submit').addEventListener('click', () => {
   let added = 0; const problems = [];
   lines.forEach((line, i) => {
     const parts = line.split('|').map(s=>s.trim());
-    if(parts.length < 16){ problems.push(`Line ${i+1}: expected 16-17 fields, got ${parts.length}.`); return; }
-    const [name, identityRaw, lookingRaw, gradeRaw, gradeOpenRaw, heightRaw, heightPrefRaw, interestsRaw, vibesRaw, dateRaw, musicRaw, activitiesRaw, socialRaw, commRaw, loveLangRaw, whatMattersRaw, bio] = parts;
+    if(parts.length < 13){ problems.push(`Line ${i+1}: expected 13-14 fields, got ${parts.length}.`); return; }
+    const [name, identityRaw, lookingRaw, gradeRaw, gradeOpenRaw, heightRaw, heightPrefRaw, interestsRaw, vibesRaw, dateRaw, musicRaw, activitiesRaw, commRaw, bio] = parts;
     if(!name){ problems.push(`Line ${i+1}: missing name.`); return; }
     const identityLower = identityRaw.toLowerCase();
     if(!['guy','girl'].includes(identityLower)) problems.push(`Line ${i+1} (${name}): identity "${identityRaw}" not recognized (use guy or girl), defaulted to guy.`);
@@ -789,12 +760,9 @@ document.getElementById('bulk-submit').addEventListener('click', () => {
     const dateTypes = normalizeTagList(dateRaw, TAGS.dateTypes).slice(0,3);
     const music = normalizeTagList(musicRaw, TAGS.music);
     const activities = normalizeTagList(activitiesRaw, TAGS.activities);
-    const social = SOCIAL_STYLE.find(s => s.toLowerCase() === (socialRaw||'').trim().toLowerCase()) || null;
     const comm = COMM_STYLE.find(s => s.toLowerCase() === (commRaw||'').trim().toLowerCase()) || null;
-    const loveLanguage = LOVE_LANGUAGE.find(s => s.toLowerCase() === (loveLangRaw||'').trim().toLowerCase()) || null;
-    const whatMatters = normalizeTagList(whatMattersRaw, TAGS.whatMatters).slice(0,2);
     if(!interests.length){ problems.push(`Line ${i+1} (${name}): no interests found.`); }
-    state.islanders.push({ id: uid(), name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, social, comm, loveLanguage, whatMatters, bio: (bio||'').trim(), source:'owner-bulk', createdAt: Date.now() });
+    state.islanders.push({ id: uid(), name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, comm, bio: (bio||'').trim(), source:'owner-bulk', createdAt: Date.now() });
     added++;
   });
   save(); renderOwner();
@@ -873,25 +841,19 @@ function computeScore(a,b){
     dateTypes: overlap(a.dateTypes,b.dateTypes),
     music: overlap(a.music,b.music),
     activities: overlap(a.activities||[],b.activities||[]),
-    whatMatters: overlap(a.whatMatters||[],b.whatMatters||[]),
     sameGrade: !!(a.grade && b.grade && a.grade===b.grade),
     heightCompat: heightCompat(a,b),
-    sameSocial: !!(a.social && b.social && a.social===b.social),
-    sameComm: !!(a.comm && b.comm && a.comm===b.comm),
-    sameLoveLanguage: !!(a.loveLanguage && b.loveLanguage && a.loveLanguage===b.loveLanguage)
+    sameComm: !!(a.comm && b.comm && a.comm===b.comm)
   };
   let score = similarity(a.interests,b.interests)*WEIGHTS.interests
     + similarity(a.vibes,b.vibes)*WEIGHTS.vibes
     + similarity(a.dateTypes,b.dateTypes)*WEIGHTS.dateTypes
     + similarity(a.music,b.music)*WEIGHTS.music
-    + similarity(a.activities,b.activities)*WEIGHTS.activities
-    + similarity(a.whatMatters,b.whatMatters)*WEIGHTS.whatMatters;
+    + similarity(a.activities,b.activities)*WEIGHTS.activities;
   if(shared.sameGrade) score += WEIGHTS.sameGrade;
   if(shared.heightCompat==='mutual') score += HEIGHT_BONUS.mutual;
   else if(shared.heightCompat==='partial') score += HEIGHT_BONUS.partial;
-  if(shared.sameSocial) score += PERSONALITY_BONUS.social;
   if(shared.sameComm) score += PERSONALITY_BONUS.comm;
-  if(shared.sameLoveLanguage) score += PERSONALITY_BONUS.loveLanguage;
   return { score, shared };
 }
 function lockedResults(){
@@ -1040,14 +1002,12 @@ document.getElementById('gen-matches').addEventListener('click', () => {
 });
 function sharedSummary(shared){
   const bits = [];
-  ['interests','vibes','dateTypes','music','activities','whatMatters'].forEach(k => {
+  ['interests','vibes','dateTypes','music','activities'].forEach(k => {
     (shared[k]||[]).forEach(t => bits.push(`${tagEmoji(k,t)} ${t}`));
   });
   if(shared.sameGrade) bits.push('🎓 same grade');
   if(shared.heightCompat==='mutual') bits.push('📏 height match');
-  if(shared.sameSocial) bits.push('🔋 same social battery');
   if(shared.sameComm) bits.push('📲 same texting style');
-  if(shared.sameLoveLanguage) bits.push('💞 same love language');
   return bits.length ? bits.join(', ') : 'a mystery spark ✨';
 }
 const MODE_BADGE = { locked:'💫 teacher pick', swipe:'🔥 mutual swipe match', score:'✨ villa pick' };
@@ -1086,12 +1046,12 @@ function downloadCSV(filename, rows){
   URL.revokeObjectURL(url);
 }
 document.getElementById('export-roster').addEventListener('click', () => {
-  const rows = [['Name','Grade','Open to grades','Identity','Open to','Height','Height Preference','Interests','Vibe','Date Ideas','Music','Activities/Clubs','Social Style','Texting Style','Love Language','What Matters Most','Mystery Clue']];
+  const rows = [['Name','Grade','Open to grades','Identity','Open to','Height','Height Preference','Interests','Vibe','Date Ideas','Music','Activities/Clubs','Texting Style','Dream Match']];
   state.islanders.forEach(p => rows.push([
     p.name, GRADE_LABEL[p.grade]||'', (p.gradeOpenTo||[]).map(g=>GRADE_LABEL[g]).join(', '),
     IDENTITY_LABEL[p.identity], p.lookingFor.join(', '), formatHeight(p.heightIn), (p.heightPref||[]).join(', '),
     p.interests.join(', '), p.vibes.join(', '), p.dateTypes.join(', '), p.music.join(', '),
-    (p.activities||[]).join(', '), p.social||'', p.comm||'', p.loveLanguage||'', (p.whatMatters||[]).join(', '), p.bio
+    (p.activities||[]).join(', '), p.comm||'', p.bio
   ]));
   downloadCSV('villa-roster.csv', rows);
 });
@@ -1126,11 +1086,11 @@ function renderReveal(){
   document.getElementById('reveal-next').disabled = state.revealIndex===state.results.pairs.length-1;
   if(!state.revealFlipped){
     el.innerHTML = `
-      <div style="font-size:1.1rem">🕵️‍♀️ Mystery Clues 🕵️‍♂️</div>
-      <div class="clue">"${escapeHtml(a.bio) || 'No clue given…'}"</div>
+      <div style="font-size:1.1rem">💭 Their Dream Matches 💭</div>
+      <div class="clue">"${escapeHtml(a.bio) || 'No description given…'}"</div>
       <div style="font-size:1.4rem">💘</div>
-      <div class="clue">"${escapeHtml(b.bio) || 'No clue given…'}"</div>
-      <p class="muted">Who could these two be?</p>`;
+      <div class="clue">"${escapeHtml(b.bio) || 'No description given…'}"</div>
+      <p class="muted">See who was looking for who...</p>`;
   } else {
     el.innerHTML = `
       <div class="couple-names">${escapeHtml(a.name)} <span class="x">💕</span> ${escapeHtml(b.name)}</div>
@@ -1182,11 +1142,8 @@ function renderSwipeCard(){
       ${target.dateTypes.map(t=>`<span class="tag-mini">${tagEmoji('dateTypes',t)} ${t}</span>`).join('')}
       ${target.music.map(t=>`<span class="tag-mini">${tagEmoji('music',t)} ${t}</span>`).join('')}
       ${(target.activities||[]).map(t=>`<span class="tag-mini">${tagEmoji('activities',t)} ${t}</span>`).join('')}
-      ${target.social ? `<span class="tag-mini">${SOCIAL_STYLE_EMOJI[target.social]||''} ${target.social}</span>` : ''}
       ${target.comm ? `<span class="tag-mini">${COMM_STYLE_EMOJI[target.comm]||''} ${target.comm}</span>` : ''}
-      ${target.loveLanguage ? `<span class="tag-mini">${LOVE_LANGUAGE_EMOJI[target.loveLanguage]||''} ${target.loveLanguage}</span>` : ''}
-      ${(target.whatMatters||[]).map(t=>`<span class="tag-mini">${tagEmoji('whatMatters',t)} ${t}</span>`).join('')}
-      <div class="swipe-bio">"${escapeHtml(target.bio) || 'No mystery clue given…'}"</div>
+      <div class="swipe-bio">"${escapeHtml(target.bio) || 'No dream match description given…'}"</div>
       <div class="swipe-actions">
         <button class="swipe-pass" data-swipe="pass" data-target="${target.id}" title="Pass">✖</button>
         <button class="swipe-like" data-swipe="like" data-target="${target.id}" title="Like">❤</button>
