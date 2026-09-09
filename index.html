@@ -399,7 +399,7 @@ function chipGroup(prefix, groupKey, max){
     `<input type="text" id="${otherId}" class="other-input" style="display:none; margin-top:6px" maxlength="60" placeholder="${OTHER_PLACEHOLDER[groupKey]||'Type your own…'}" />` +
     (max ? `<div class="hint">Choose up to ${max} (Other counts as one).</div>` : '');
 }
-const WIZARD_STEPS = 6;
+const WIZARD_STEPS = 5;
 function stepNav(idx){
   return `<div class="row wizard-nav" style="justify-content:space-between">
     ${idx>1 ? `<button type="button" class="btn ghost" data-step-prev>← Back</button>` : `<span></span>`}
@@ -462,24 +462,19 @@ function personFormHTML(prefix){
       <label class="field"><span>Your vibe</span>${chipGroup(prefix,'vibes',3)}</label>
       <label class="field"><span>Dream date</span>${chipGroup(prefix,'dateTypes',3)}</label>
       <label class="field"><span>Music</span>${chipGroup(prefix,'music')}</label>
-      ${stepNav(4)}
-    </div>
-    <div class="step" data-step="5">
-      <h4>Personality &amp; Values</h4>
-      <p class="muted" style="margin-top:0">A little deeper than the basics — this feeds into your match too.</p>
       <label class="field"><span>Texting/calling style</span>
         <div class="radio-row">
           ${COMM_STYLE.map(s => `<label><input type="radio" name="${prefix}-comm" value="${s}"> ${COMM_STYLE_EMOJI[s]} ${s}</label>`).join('')}
         </div>
       </label>
-      ${stepNav(5)}
+      ${stepNav(4)}
     </div>
-    <div class="step" data-step="6">
+    <div class="step" data-step="5">
       <h4>Last Thing</h4>
-      <label class="field"><span>Your dream match (optional)</span>
+      <label class="field"><span>Anyone in mind? (optional)</span>
         <textarea id="${prefix}-bio" maxlength="140" placeholder="Describe your ideal person…"></textarea>
       </label>
-      ${stepNav(6)}
+      ${stepNav(5)}
     </div>
   `;
 }
