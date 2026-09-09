@@ -20,11 +20,11 @@ no build step, no server. Data lives entirely in the browser's `localStorage`.
   category has an "Other" option that reveals a text field for something
   specific — a favorite song, a custom date idea — shown with a ⭐
   wherever traits are displayed.
-- **Swipe** — Tinder-style mode: students swipe yes/no on anonymized mystery
-  profiles; a couple only forms if both sides swiped yes on each other.
-- **Owner Panel** (passcode-gated, classroom-level gate only) — roster
-  management, manual entry, bulk import (for transcribing paper forms), locking
-  in specific couples, choosing between the two matching modes, and CSV export.
+- **Owner Panel** (passcode-gated, classroom-level gate only, reached via the
+  nav tab or the small "Owner login" link at the bottom of the page) — roster
+  management (including how many students have joined so far), manual entry,
+  bulk import (for transcribing paper forms), locking in specific couples,
+  running the match, and CSV export.
 - **Mystery Reveal** — shows each couple's dream-match description first,
   then flips to reveal names and shared traits, with prev/next controls
   for presenting to a class.

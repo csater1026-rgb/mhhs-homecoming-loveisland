@@ -94,28 +94,15 @@
   @media(max-width:640px){.grid2{grid-template-columns:1fr}}
   code.tmpl{display:block; white-space:pre-wrap; background:#241a0c; padding:12px; border-radius:10px; font-size:.75rem; color:var(--teal); margin-top:8px}
   .count-pill{background:rgba(32,24,13,.07); border-radius:999px; padding:3px 10px; font-size:.72rem; color:var(--ink-dim)}
-  .swipe-card{
-    background:linear-gradient(160deg, rgba(184,69,26,.2), rgba(232,101,15,.14));
-    border:1px solid var(--card-border); border-radius:20px; padding:26px; text-align:center; max-width:420px; margin:16px auto 0;
-  }
-  .swipe-card h4{margin:0 0 10px; font-size:1rem; color:var(--pink-soft)}
-  .swipe-bio{background:rgba(255,255,255,.6); border-radius:12px; padding:12px 16px; margin:12px 0; font-style:italic}
-  .swipe-actions{display:flex; justify-content:center; gap:18px; margin-top:18px}
-  .swipe-actions button{width:64px; height:64px; border-radius:50%; font-size:1.5rem; border:none; cursor:pointer}
-  .swipe-pass{background:rgba(194,59,42,.16); border:2px solid var(--bad) !important; color:var(--bad)}
-  .swipe-like{background:rgba(47,143,62,.16); border:2px solid var(--good) !important; color:var(--good)}
-  .swipe-progress{text-align:center; color:var(--ink-dim); font-size:.8rem; margin-top:12px}
   .step{display:none}
   .step.active{display:block; animation:stepIn .2s ease}
   @keyframes stepIn{from{opacity:0; transform:translateX(6px)} to{opacity:1; transform:translateX(0)}}
   .wizard-progress{font-size:.72rem; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.8px; font-weight:700; margin-bottom:14px}
   .wizard-nav{margin-top:20px; padding-top:16px; border-top:1px solid var(--card-border)}
   .step h4{margin:0 0 12px; font-size:1.05rem; color:var(--pink-soft)}
-  .mode-choice{display:flex; flex-direction:column; gap:10px; margin-top:8px}
-  .mode-choice label{display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border:1px solid var(--card-border); border-radius:12px; cursor:pointer}
-  .mode-choice input{margin-top:3px}
   footer{text-align:center; color:var(--ink-dim); font-size:.75rem; padding:30px 0 4px}
-  footer.credit{font-size:.68rem; opacity:.6; padding:2px 0 14px}
+  footer.credit{font-size:.68rem; opacity:.6; padding:2px 0 4px}
+  .owner-login-link{background:none; border:none; color:var(--ink-dim); font-size:.68rem; opacity:.7; cursor:pointer; text-decoration:underline; padding:2px 0 14px; display:block; margin:0 auto}
 </style>
 </head>
 <body>
@@ -130,7 +117,6 @@
     </div>
     <nav class="tabs">
       <button data-view="join" class="active">Join the Villa</button>
-      <button data-view="swipe">Swipe 💫</button>
       <button data-view="owner">Owner Panel 🔒</button>
     </nav>
   </header>
@@ -143,21 +129,8 @@
       <div id="join-form-container"></div>
       <div class="row" style="margin-top:16px">
         <button class="btn primary" id="join-submit">Join the Villa 💌</button>
-        <span class="count-pill" id="join-count"></span>
       </div>
       <div id="join-banner"></div>
-    </div>
-  </section>
-
-  <!-- SWIPE VIEW -->
-  <section id="view-swipe" class="view">
-    <div class="card">
-      <h2>Swipe 💫</h2>
-      <p class="muted">Tinder-style matching: review anonymized "mystery" islanders and swipe. Two people only match if you <strong>both</strong> swipe yes on each other — your teacher decides which matching mode (this or the compatibility score) actually gets used to generate results.</p>
-      <label class="field"><span>Who are you?</span>
-        <select id="swipe-who"><option value="">Choose your name…</option></select>
-      </label>
-      <div id="swipe-area"></div>
     </div>
   </section>
 
@@ -218,18 +191,7 @@ Jordan Lee | girl | guys | 11 | 10,11,12 | 5'6" | About the same height | Music,
 
     <div class="card">
       <h3 style="margin-top:0">Matchmaking</h3>
-      <p class="muted">Choose how "Run the Villa Match" decides couples. Both modes still respect locked-in couples below.</p>
-      <div class="mode-choice">
-        <label>
-          <input type="radio" name="match-mode" value="score">
-          <span><strong>Compatibility score.</strong> Scores every eligible pair on shared interests, vibe, ideal date type, and music taste, then pairs up the strongest matches first.</span>
-        </label>
-        <label>
-          <input type="radio" name="match-mode" value="swipe">
-          <span><strong>Swipe &amp; match (Tinder-style).</strong> Only pairs people who <em>both</em> swiped yes on each other in the Swipe tab. Ties among someone's multiple mutual matches are broken by compatibility score.</span>
-        </label>
-      </div>
-      <p class="muted" id="swipe-stats" style="margin-top:10px"></p>
+      <p class="muted">"Run the Villa Match" scores every eligible pair on shared interests, vibe, ideal date type, music, and more, then pairs up the strongest matches first. Locked-in couples below are always respected.</p>
       <div class="grid2" style="margin-top:14px">
         <div>
           <h4 style="margin:0 0 6px">Lock in a couple first (optional)</h4>
@@ -284,6 +246,7 @@ Jordan Lee | girl | guys | 11 | 10,11,12 | 5'6" | About the same height | Music,
 
   <footer>All data stays local to this browser (localStorage) — nothing is sent to a server.</footer>
   <footer class="credit">Created by The Goat</footer>
+  <button class="owner-login-link" id="owner-login-bottom">Owner login</button>
 </div>
 
 <script>
@@ -330,7 +293,7 @@ function load(){
   }catch(e){ return defaultState(); }
 }
 function defaultState(){
-  return { islanders: [], lockedPairs: [], ownerPasscode: null, ownerUnlocked:false, results: null, revealIndex: 0, revealFlipped: false, swipes: {}, matchMode: 'score', swipeAsId: null };
+  return { islanders: [], lockedPairs: [], ownerPasscode: null, ownerUnlocked:false, results: null, revealIndex: 0, revealFlipped: false };
 }
 let state = load();
 function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
@@ -339,8 +302,9 @@ function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); 
 const tabButtons = document.querySelectorAll('nav.tabs button');
 tabButtons.forEach(b => b.addEventListener('click', () => {
   if(b.dataset.view === 'owner'){ goOwner(); }
-  else{ showView(b.dataset.view); if(b.dataset.view === 'swipe') renderSwipe(); }
+  else{ showView(b.dataset.view); }
 }));
+document.getElementById('owner-login-bottom').addEventListener('click', goOwner);
 function showView(name){
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
@@ -616,8 +580,6 @@ const joinContainer = document.getElementById('join-form-container');
 joinContainer.innerHTML = personFormHTML('join');
 wireChipHighlighting(joinContainer);
 initWizard('join');
-function refreshJoinCount(){ document.getElementById('join-count').textContent = state.islanders.length + ' joined so far'; }
-refreshJoinCount();
 document.getElementById('join-submit').addEventListener('click', () => {
   const p = readPersonForm('join');
   const err = validatePerson(p);
@@ -628,7 +590,6 @@ document.getElementById('join-submit').addEventListener('click', () => {
   clearPersonForm('join');
   wizardShow('join', 1);
   banner.innerHTML = `<div class="banner ok">You're in the villa, ${escapeHtml(p.name)}! 💕 Wait for the mystery reveal.</div>`;
-  refreshJoinCount();
 });
 
 // ---------- Owner: roster form ----------
@@ -702,12 +663,8 @@ function renderRoster(){
     const delId = b.dataset.del;
     state.islanders = state.islanders.filter(x=>x.id!==delId);
     state.lockedPairs = state.lockedPairs.filter(pair => pair[0]!==delId && pair[1]!==delId);
-    delete state.swipes[delId];
-    Object.values(state.swipes).forEach(targets => delete targets[delId]);
-    if(state.swipeAsId === delId) state.swipeAsId = null;
     save(); renderOwner();
   }));
-  refreshJoinCount();
 }
 
 // ---------- Bulk import ----------
@@ -858,28 +815,17 @@ function lockedResults(){
     return { a, b, shared, mode:'locked' };
   });
 }
-function greedyPair(pool, candidates, mode){
+function greedyPair(pool, candidates){
   const results = lockedResults();
   candidates.sort((x,y) => y.sortKey - x.sortKey);
   const matched = new Set();
   candidates.forEach(c => {
     if(matched.has(c.a.id) || matched.has(c.b.id)) return;
     matched.add(c.a.id); matched.add(c.b.id);
-    results.push({ a:c.a, b:c.b, shared:c.shared, mode });
+    results.push({ a:c.a, b:c.b, shared:c.shared, mode:'score' });
   });
   const leftover = pool.filter(p => !matched.has(p.id));
   return { results, leftover };
-}
-// canPair: is this a legal pairing under the current matching mode? (score mode: just
-// eligibility; swipe mode: eligibility AND both people swiped yes on each other)
-function canPair(mode, a, b){
-  if(!eligible(a,b)) return false;
-  if(mode==='swipe'){
-    const aLikesB = state.swipes[a.id] && state.swipes[a.id][b.id] === true;
-    const bLikesA = state.swipes[b.id] && state.swipes[b.id][a.id] === true;
-    if(!aLikesB || !bLikesA) return false;
-  }
-  return true;
 }
 // Greedy pairing (by score, highest first) is only ever an approximation of the best
 // possible set of couples. This runs a local-search pass on top of it: repeatedly look
@@ -887,7 +833,7 @@ function canPair(mode, a, b){
 // couple, that raises total compatibility, and take it. Repeats until a full pass finds
 // no more improving swap (or maxPasses safety cap), which is a standard and effective
 // way to get near-optimal pairings without the complexity of a full matching algorithm.
-function localSearchImprove(results, leftover, mode, maxPasses){
+function localSearchImprove(results, leftover, maxPasses){
   maxPasses = maxPasses || 25;
   const pairScore = (x,y) => computeScore(x,y).score;
   for(let pass=0; pass<maxPasses; pass++){
@@ -898,7 +844,7 @@ function localSearchImprove(results, leftover, mode, maxPasses){
         if(results[j].mode==='locked') continue;
         const c1 = results[i], c2 = results[j];
         const current = pairScore(c1.a,c1.b) + pairScore(c2.a,c2.b);
-        if(canPair(mode,c1.a,c2.a) && canPair(mode,c1.b,c2.b)){
+        if(eligible(c1.a,c2.a) && eligible(c1.b,c2.b)){
           const alt = pairScore(c1.a,c2.a) + pairScore(c1.b,c2.b);
           if(alt > current + 1e-9){
             results[i] = { a:c1.a, b:c2.a, shared:computeScore(c1.a,c2.a).shared, mode:c1.mode };
@@ -906,7 +852,7 @@ function localSearchImprove(results, leftover, mode, maxPasses){
             improved = true; continue;
           }
         }
-        if(canPair(mode,c1.a,c2.b) && canPair(mode,c1.b,c2.a)){
+        if(eligible(c1.a,c2.b) && eligible(c1.b,c2.a)){
           const alt = pairScore(c1.a,c2.b) + pairScore(c1.b,c2.a);
           if(alt > current + 1e-9){
             results[i] = { a:c1.a, b:c2.b, shared:computeScore(c1.a,c2.b).shared, mode:c1.mode };
@@ -922,11 +868,11 @@ function localSearchImprove(results, leftover, mode, maxPasses){
       for(let i=0;i<results.length;i++){
         const c = results[i];
         if(c.mode==='locked') continue;
-        if(canPair(mode,single,c.b)){
+        if(eligible(single,c.b)){
           const gain = pairScore(single,c.b) - pairScore(c.a,c.b);
           if(gain > bestGain){ bestGain=gain; bestIdx=i; bestKeep=c.b; bestDisplaced=c.a; }
         }
-        if(canPair(mode,single,c.a)){
+        if(eligible(single,c.a)){
           const gain = pairScore(single,c.a) - pairScore(c.a,c.b);
           if(gain > bestGain){ bestGain=gain; bestIdx=i; bestKeep=c.a; bestDisplaced=c.b; }
         }
@@ -941,7 +887,7 @@ function localSearchImprove(results, leftover, mode, maxPasses){
   }
   return { results, leftover };
 }
-function generateMatchesScoreMode(){
+function generateMatches(){
   const lockedIds = new Set(state.lockedPairs.flat());
   const pool = state.islanders.filter(p => !lockedIds.has(p.id));
   const candidates = [];
@@ -953,41 +899,12 @@ function generateMatchesScoreMode(){
       candidates.push({ a, b, shared, sortKey: score + Math.random()*0.75 });
     }
   }
-  const { results, leftover } = greedyPair(pool, candidates, 'score');
-  return localSearchImprove(results, leftover, 'score');
+  const { results, leftover } = greedyPair(pool, candidates);
+  return localSearchImprove(results, leftover);
 }
-function mutualPairs(pool){
-  const candidates = [];
-  for(let i=0;i<pool.length;i++){
-    for(let j=i+1;j<pool.length;j++){
-      const a = pool[i], b = pool[j];
-      if(!canPair('swipe',a,b)) continue;
-      const { score, shared } = computeScore(a,b);
-      candidates.push({ a, b, shared, sortKey: score + Math.random()*0.75 });
-    }
-  }
-  return candidates;
-}
-function generateMatchesSwipeMode(){
-  const lockedIds = new Set(state.lockedPairs.flat());
-  const pool = state.islanders.filter(p => !lockedIds.has(p.id));
-  const { results, leftover } = greedyPair(pool, mutualPairs(pool), 'swipe');
-  return localSearchImprove(results, leftover, 'swipe');
-}
-function generateMatches(){
-  return state.matchMode === 'swipe' ? generateMatchesSwipeMode() : generateMatchesScoreMode();
-}
-document.querySelectorAll('input[name="match-mode"]').forEach(r => r.addEventListener('change', () => {
-  if(r.checked){ state.matchMode = r.value; save(); }
-}));
 document.getElementById('gen-matches').addEventListener('click', () => {
   const banner = document.getElementById('match-banner');
   if(state.islanders.length < 2){ banner.innerHTML = '<div class="banner err">Need at least 2 islanders to match.</div>'; return; }
-  if(state.matchMode === 'swipe'){
-    const lockedIds = new Set(state.lockedPairs.flat());
-    const pool = state.islanders.filter(p => !lockedIds.has(p.id));
-    if(!mutualPairs(pool).length){ banner.innerHTML = '<div class="banner err">No mutual swipe matches yet — have islanders swipe on each other in the Swipe tab first.</div>'; return; }
-  }
   const { results, leftover } = generateMatches();
   state.results = { pairs: results.map(r => ({ aId:r.a.id, bId:r.b.id, shared:r.shared, mode:r.mode })), leftoverIds: leftover.map(p=>p.id) };
   state.revealIndex = 0; state.revealFlipped = false;
@@ -1005,7 +922,7 @@ function sharedSummary(shared){
   if(shared.sameComm) bits.push('📲 same texting style');
   return bits.length ? bits.join(', ') : 'a mystery spark ✨';
 }
-const MODE_BADGE = { locked:'💫 teacher pick', swipe:'🔥 mutual swipe match', score:'✨ villa pick' };
+const MODE_BADGE = { locked:'💫 teacher pick', score:'✨ villa pick' };
 function renderResults(){
   const card = document.getElementById('results-card');
   const list = document.getElementById('results-list');
@@ -1024,9 +941,8 @@ function renderResults(){
 }
 
 document.getElementById('reset-all').addEventListener('click', () => {
-  if(!confirm('This deletes the entire roster, locked pairs, swipes, and results (passcode and matching mode stay). Continue?')) return;
+  if(!confirm('This deletes the entire roster, locked pairs, and results (passcode stays). Continue?')) return;
   state.islanders = []; state.lockedPairs = []; state.results = null; state.revealIndex = 0; state.revealFlipped = false;
-  state.swipes = {}; state.swipeAsId = null;
   save(); renderOwner();
 });
 
@@ -1094,88 +1010,15 @@ function renderReveal(){
   }
 }
 
-// ---------- Swipe view ----------
-function renderSwipe(){
-  const who = document.getElementById('swipe-who');
-  const currentVal = state.swipeAsId || '';
-  who.innerHTML = `<option value="">Choose your name…</option>` +
-    state.islanders.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
-  who.value = state.islanders.some(p=>p.id===currentVal) ? currentVal : '';
-  renderSwipeCard();
-}
-document.getElementById('swipe-who').addEventListener('change', (e) => {
-  state.swipeAsId = e.target.value || null;
-  save(); renderSwipeCard();
-});
-function swipeCandidates(swiperId){
-  const me = state.islanders.find(p=>p.id===swiperId);
-  if(!me) return [];
-  const seen = state.swipes[swiperId] || {};
-  return state.islanders.filter(p => p.id!==me.id && eligible(me,p) && !(p.id in seen));
-}
-function renderSwipeCard(){
-  const area = document.getElementById('swipe-area');
-  const swiperId = state.swipeAsId;
-  if(!swiperId){ area.innerHTML = '<p class="muted">Pick your name above to start swiping.</p>'; return; }
-  const me = state.islanders.find(p=>p.id===swiperId);
-  const total = state.islanders.filter(p => p.id!==swiperId && eligible(me,p)).length;
-  const remaining = swipeCandidates(swiperId);
-  const reviewed = total - remaining.length;
-  if(!remaining.length){
-    area.innerHTML = `<div class="swipe-card"><h4>You're all caught up! 🌴</h4><p class="muted">Reviewed ${reviewed} of ${total} eligible islanders. Check back after your teacher adds more people.</p></div>`;
-    return;
-  }
-  const target = remaining[0];
-  area.innerHTML = `
-    <div class="swipe-progress">Reviewed ${reviewed} of ${total}</div>
-    <div class="swipe-card">
-      <h4>🕵️ Mystery Islander</h4>
-      <span class="tag-mini">🎓 ${GRADE_LABEL[target.grade]||'—'}</span>
-      <span class="tag-mini">📏 ${formatHeight(target.heightIn)}</span>
-      ${target.interests.map(t=>`<span class="tag-mini">${tagEmoji('interests',t)} ${t}</span>`).join('')}
-      ${target.vibes.map(t=>`<span class="tag-mini">${tagEmoji('vibes',t)} ${t}</span>`).join('')}
-      ${target.dateTypes.map(t=>`<span class="tag-mini">${tagEmoji('dateTypes',t)} ${t}</span>`).join('')}
-      ${target.music.map(t=>`<span class="tag-mini">${tagEmoji('music',t)} ${t}</span>`).join('')}
-      ${(target.activities||[]).map(t=>`<span class="tag-mini">${tagEmoji('activities',t)} ${t}</span>`).join('')}
-      ${target.comm ? `<span class="tag-mini">${COMM_STYLE_EMOJI[target.comm]||''} ${target.comm}</span>` : ''}
-      <div class="swipe-bio">"${escapeHtml(target.bio) || 'No dream match description given…'}"</div>
-      <div class="swipe-actions">
-        <button class="swipe-pass" data-swipe="pass" data-target="${target.id}" title="Pass">✖</button>
-        <button class="swipe-like" data-swipe="like" data-target="${target.id}" title="Like">❤</button>
-      </div>
-    </div>`;
-  area.querySelectorAll('[data-swipe]').forEach(btn => btn.addEventListener('click', () => {
-    const targetId = btn.dataset.target;
-    state.swipes[swiperId] = state.swipes[swiperId] || {};
-    state.swipes[swiperId][targetId] = btn.dataset.swipe === 'like';
-    save();
-    renderSwipeCard();
-  }));
-}
-
 // ---------- Owner render ----------
-function renderSwipeStats(){
-  const el = document.getElementById('swipe-stats');
-  if(!el) return;
-  const swiped = Object.keys(state.swipes).filter(id => Object.keys(state.swipes[id]).length).length;
-  const lockedIds = new Set(state.lockedPairs.flat());
-  const pool = state.islanders.filter(p => !lockedIds.has(p.id));
-  const mutual = mutualPairs(pool).length;
-  el.textContent = `${swiped} of ${state.islanders.length} islanders have started swiping · ${mutual} mutual match(es) available right now.`;
-  document.querySelectorAll('input[name="match-mode"]').forEach(r => { r.checked = (r.value === state.matchMode); });
-}
 function renderOwner(){
   renderRoster();
   renderLockUI();
   renderResults();
-  renderSwipeStats();
 }
 function escapeHtml(s){
   return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-
-// ---------- init ----------
-refreshJoinCount();
 </script>
 </body>
 </html>
