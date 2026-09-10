@@ -82,7 +82,6 @@ th{color:var(--ink-dim); font-weight:600; font-size:.75rem; text-transform:upper
 .locked-list li{margin-bottom:6px; font-size:.85rem}
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
 @media(max-width:640px){.grid2{grid-template-columns:1fr}}
-code.tmpl{display:block; white-space:pre-wrap; background:#241a0c; padding:12px; border-radius:10px; font-size:.75rem; color:var(--teal); margin-top:8px}
 .count-pill{background:rgba(32,24,13,.07); border-radius:999px; padding:3px 10px; font-size:.72rem; color:var(--ink-dim)}
 .step{display:none}
 .step.active{display:block; animation:stepIn .2s ease}

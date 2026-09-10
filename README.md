@@ -27,10 +27,9 @@ without weakening it.
   specific — a favorite song, a custom date idea — shown with a ⭐
   wherever traits are displayed.
 - **Owner Panel** (passcode-gated, classroom-level gate only, reached via the
-  nav tab or the small "Owner login" link at the bottom of the page) — roster
-  management (including how many students have joined so far), manual entry,
-  bulk import (for transcribing paper forms), locking in specific couples,
-  running the match, and CSV export.
+  small "Owner login" link at the bottom of the page) — roster management
+  (including how many students have joined so far), manual entry, locking in
+  specific couples, running the match, and CSV export.
 - **Mystery Reveal** — shows each couple's dream-match description first,
   then flips to reveal names and shared traits, with prev/next controls
   for presenting to a class.

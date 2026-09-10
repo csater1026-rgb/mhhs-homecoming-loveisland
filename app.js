@@ -415,64 +415,6 @@ function renderRoster(){
   }));
 }
 
-// ---------- Bulk import ----------
-function normalizeTagList(str, allowed){
-  if(!str) return [];
-  return str.split(',').map(s=>s.trim()).filter(Boolean).map(s => {
-    const match = allowed.find(a => a.toLowerCase() === s.toLowerCase());
-    return match || s;
-  });
-}
-function parseHeight(str){
-  if(!str) return null;
-  const m = str.match(/(\d)\s*'?\s*(\d{1,2})?/);
-  if(!m) return null;
-  const ft = parseInt(m[1],10);
-  const inch = m[2]!=null ? parseInt(m[2],10) : 0;
-  if(isNaN(ft) || isNaN(inch) || inch>11) return null;
-  return ft*12 + inch;
-}
-document.getElementById('bulk-submit').addEventListener('click', () => {
-  const raw = document.getElementById('bulk-input').value;
-  const lines = raw.split('\n').map(l=>l.trim()).filter(l => l && !l.startsWith('#'));
-  let added = 0; const problems = [];
-  lines.forEach((line, i) => {
-    const parts = line.split('|').map(s=>s.trim());
-    if(parts.length < 13){ problems.push(`Line ${i+1}: expected 13-14 fields, got ${parts.length}.`); return; }
-    const [name, identityRaw, lookingRaw, gradeRaw, gradeOpenRaw, heightRaw, heightPrefRaw, interestsRaw, vibesRaw, dateRaw, musicRaw, activitiesRaw, commRaw, bio] = parts;
-    if(!name){ problems.push(`Line ${i+1}: missing name.`); return; }
-    const identityLower = identityRaw.toLowerCase();
-    if(!['guy','girl'].includes(identityLower)) problems.push(`Line ${i+1} (${name}): identity "${identityRaw}" not recognized (use guy or girl), defaulted to guy.`);
-    const identity = identityLower==='girl' ? 'girl' : 'guy';
-    let lookingFor = lookingRaw.split(',').map(s=>s.trim().toLowerCase()).filter(s=>['guys','girls'].includes(s));
-    if(!lookingFor.length){ lookingFor = ['guys','girls']; problems.push(`Line ${i+1} (${name}): no valid "open to" values, defaulted to everyone.`); }
-    const grade = GRADES.includes(gradeRaw.trim()) ? gradeRaw.trim() : null;
-    if(!grade) problems.push(`Line ${i+1} (${name}): grade "${gradeRaw}" not recognized (use 9, 10, 11, or 12).`);
-    let gradeOpenTo = gradeOpenRaw.split(',').map(s=>s.trim()).filter(s=>GRADES.includes(s));
-    if(!gradeOpenTo.length){ gradeOpenTo = GRADES.slice(); problems.push(`Line ${i+1} (${name}): no valid "open to grades" values, defaulted to all grades.`); }
-    let heightIn = parseHeight(heightRaw);
-    if(heightIn==null) problems.push(`Line ${i+1} (${name}): height "${heightRaw}" not recognized (use e.g. 5'6").`);
-    else if(heightIn<60){ heightIn=60; problems.push(`Line ${i+1} (${name}): height below the 5'0" minimum, set to 5'0".`); }
-    else if(heightIn>77){ heightIn=77; }
-    const heightPref = normalizeTagList(heightPrefRaw, HEIGHT_PREF);
-    const interests = normalizeTagList(interestsRaw, TAGS.interests);
-    const vibes = normalizeTagList(vibesRaw, TAGS.vibes).slice(0,3);
-    const dateTypes = normalizeTagList(dateRaw, TAGS.dateTypes).slice(0,3);
-    const music = normalizeTagList(musicRaw, TAGS.music);
-    const activities = normalizeTagList(activitiesRaw, TAGS.activities);
-    const comm = COMM_STYLE.find(s => s.toLowerCase() === (commRaw||'').trim().toLowerCase()) || null;
-    if(!interests.length){ problems.push(`Line ${i+1} (${name}): no interests found.`); }
-    state.islanders.push({ id: uid(), name, identity, lookingFor, grade, gradeOpenTo, heightIn, heightPref, interests, vibes, dateTypes, music, activities, comm, bio: (bio||'').trim(), source:'owner-bulk', createdAt: Date.now() });
-    added++;
-  });
-  save(); renderOwner();
-  const banner = document.getElementById('bulk-banner');
-  let html = `<div class="banner ${added?'ok':'err'}">Imported ${added} islander(s).</div>`;
-  if(problems.length) html += `<div class="banner err">${problems.map(escapeHtml).join('<br>')}</div>`;
-  banner.innerHTML = html;
-  if(added) document.getElementById('bulk-input').value = '';
-});
-
 // ---------- Locked pairs ----------
 function renderLockUI(){
   const a = document.getElementById('lock-a'), b = document.getElementById('lock-b');
