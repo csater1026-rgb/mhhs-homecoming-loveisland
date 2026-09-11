@@ -1,5 +1,4 @@
 'use strict';
-const STORAGE_KEY = 'love-island-homecoming-v1';
 
 const TAGS = {
   interests: ['Sports','Music','Gaming','Art','Movies & TV','Outdoors','Cooking','Reading','Fashion','Fitness','Dance','Tech'],
@@ -30,21 +29,26 @@ const WEIGHTS = {interests:3, vibes:2.5, dateTypes:2, music:1.5, activities:2, s
 const HEIGHT_BONUS = {mutual:2, partial:0.8};
 const PERSONALITY_BONUS = {comm:0.8};
 
-function uid(){ return 'p_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+// ---------- Server API ----------
+// Everything the owner sees/changes lives in the shared Postgres database
+// behind these endpoints, gated by a real signed-in session (see /api and
+// /lib). Only /api/join is public — that's how students add themselves.
+async function api(path, options){
+  const res = await fetch(path, Object.assign({ headers: {'Content-Type':'application/json'} }, options));
+  let data = null;
+  try{ data = await res.json(); }catch(e){}
+  if(!res.ok){ throw new Error((data && data.error) || `Request failed (${res.status})`); }
+  return data;
+}
 
-function load(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return defaultState();
-    const s = JSON.parse(raw);
-    return Object.assign(defaultState(), s);
-  }catch(e){ return defaultState(); }
+let ownerRoster = [];
+let ownerState = { lockedPairs: [], results: null, revealIndex: 0, revealFlipped: false };
+async function loadOwnerData(){
+  const rosterData = await api('/api/roster');
+  const stateData = await api('/api/state');
+  ownerRoster = rosterData.islanders;
+  ownerState = stateData;
 }
-function defaultState(){
-  return { islanders: [], lockedPairs: [], ownerPasscode: null, ownerUnlocked:false, results: null, revealIndex: 0, revealFlipped: false };
-}
-let state = load();
-function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
 
 // ---------- Navigation ----------
 const tabButtons = document.querySelectorAll('nav.tabs button');
@@ -58,39 +62,39 @@ function showView(name){
   document.getElementById('view-' + name).classList.add('active');
   tabButtons.forEach(b => b.classList.toggle('active', b.dataset.view === name || (name==='owner-gate' && b.dataset.view==='owner') || (name==='reveal' && b.dataset.view==='owner')));
 }
-function goOwner(){
-  if(state.ownerPasscode && state.ownerUnlocked){ showView('owner'); renderOwner(); }
-  else{ renderGate(); showView('owner-gate'); }
+async function goOwner(){
+  try{
+    await loadOwnerData();
+    showView('owner');
+    renderOwner();
+  }catch(e){
+    renderGate();
+    showView('owner-gate');
+  }
 }
 function renderGate(){
-  const isSetup = !state.ownerPasscode;
-  document.getElementById('gate-title').textContent = isSetup ? 'Set a teacher passcode' : 'Enter teacher passcode';
-  document.getElementById('gate-desc').textContent = isSetup
-    ? 'No passcode set yet on this device. Pick one now to protect the owner panel.'
-    : 'Enter the passcode to access the roster and matching tools.';
-  document.getElementById('gate-submit').textContent = isSetup ? 'Set passcode' : 'Unlock';
+  document.getElementById('gate-title').textContent = 'Owner Passcode';
+  document.getElementById('gate-desc').textContent = 'Enter the shared owner passcode to access the roster and matching tools.';
+  document.getElementById('gate-submit').textContent = 'Unlock';
   document.getElementById('gate-input').value = '';
   document.getElementById('gate-banner').innerHTML = '';
 }
-document.getElementById('gate-submit').addEventListener('click', () => {
+document.getElementById('gate-submit').addEventListener('click', async () => {
   const val = document.getElementById('gate-input').value;
   const banner = document.getElementById('gate-banner');
-  if(!state.ownerPasscode){
-    if(val.length < 3){ banner.innerHTML = '<div class="banner err">Pick a passcode with at least 3 characters.</div>'; return; }
-    state.ownerPasscode = val; state.ownerUnlocked = true; save();
-    showView('owner'); renderOwner();
-  } else {
-    if(val === state.ownerPasscode){ state.ownerUnlocked = true; save(); showView('owner'); renderOwner(); }
-    else{ banner.innerHTML = '<div class="banner err">Wrong passcode.</div>'; }
+  banner.innerHTML = '';
+  try{
+    await api('/api/login', { method:'POST', body: JSON.stringify({ passcode: val }) });
+    await loadOwnerData();
+    showView('owner');
+    renderOwner();
+  }catch(e){
+    banner.innerHTML = `<div class="banner err">${escapeHtml(e.message)}</div>`;
   }
 });
-document.getElementById('owner-lock').addEventListener('click', () => { state.ownerUnlocked = false; save(); showView('join'); });
-document.getElementById('owner-change-pass').addEventListener('click', () => {
-  const cur = prompt('Enter current passcode to confirm:');
-  if(cur !== state.ownerPasscode){ alert('Incorrect current passcode.'); return; }
-  const next = prompt('Enter new passcode:');
-  if(next && next.length >= 3){ state.ownerPasscode = next; save(); alert('Passcode updated.'); }
-  else if(next !== null){ alert('Passcode must be at least 3 characters.'); }
+document.getElementById('owner-lock').addEventListener('click', async () => {
+  try{ await api('/api/logout', { method:'POST' }); }catch(e){}
+  showView('join');
 });
 
 // ---------- Person form ----------
@@ -328,16 +332,24 @@ const joinContainer = document.getElementById('join-form-container');
 joinContainer.innerHTML = personFormHTML('join');
 wireChipHighlighting(joinContainer);
 initWizard('join');
-document.getElementById('join-submit').addEventListener('click', () => {
+document.getElementById('join-submit').addEventListener('click', async () => {
   const p = readPersonForm('join');
   const err = validatePerson(p);
   const banner = document.getElementById('join-banner');
   if(err){ banner.innerHTML = `<div class="banner err">${err}</div>`; return; }
-  p.id = uid(); p.source = 'self'; p.createdAt = Date.now();
-  state.islanders.push(p); save();
-  clearPersonForm('join');
-  wizardShow('join', 1);
-  banner.innerHTML = `<div class="banner ok">You're in the villa, ${escapeHtml(p.name)}! 💕 Wait for the mystery reveal.</div>`;
+  const btn = document.getElementById('join-submit');
+  btn.disabled = true;
+  banner.innerHTML = '';
+  try{
+    await api('/api/join', { method:'POST', body: JSON.stringify(p) });
+    clearPersonForm('join');
+    wizardShow('join', 1);
+    banner.innerHTML = `<div class="banner ok">You're in the villa, ${escapeHtml(p.name)}! 💕 Wait for the mystery reveal.</div>`;
+  }catch(e){
+    banner.innerHTML = `<div class="banner err">${escapeHtml(e.message)}</div>`;
+  }finally{
+    btn.disabled = false;
+  }
 });
 
 // ---------- Owner: roster form ----------
@@ -346,24 +358,28 @@ ownerContainer.innerHTML = personFormHTML('owner');
 wireChipHighlighting(ownerContainer);
 initWizard('owner');
 let editingId = null;
-document.getElementById('owner-submit').addEventListener('click', () => {
+document.getElementById('owner-submit').addEventListener('click', async () => {
   const p = readPersonForm('owner');
   const err = validatePerson(p);
   const banner = document.getElementById('owner-form-banner');
   if(err){ banner.innerHTML = `<div class="banner err">${err}</div>`; return; }
-  if(editingId){
-    const idx = state.islanders.findIndex(x=>x.id===editingId);
-    if(idx>-1) state.islanders[idx] = Object.assign(state.islanders[idx], p);
-    editingId = null;
-    document.getElementById('owner-submit').textContent = 'Add islander';
-    document.getElementById('owner-cancel-edit').classList.add('hidden');
-    banner.innerHTML = `<div class="banner ok">Updated ${escapeHtml(p.name)}.</div>`;
-  } else {
-    p.id = uid(); p.source = 'owner'; p.createdAt = Date.now();
-    state.islanders.push(p);
-    banner.innerHTML = `<div class="banner ok">Added ${escapeHtml(p.name)}.</div>`;
+  banner.innerHTML = '';
+  try{
+    if(editingId){
+      await api('/api/roster', { method:'PATCH', body: JSON.stringify(Object.assign({ id: editingId }, p)) });
+      editingId = null;
+      document.getElementById('owner-submit').textContent = 'Add islander';
+      document.getElementById('owner-cancel-edit').classList.add('hidden');
+      banner.innerHTML = `<div class="banner ok">Updated ${escapeHtml(p.name)}.</div>`;
+    } else {
+      await api('/api/roster', { method:'POST', body: JSON.stringify(p) });
+      banner.innerHTML = `<div class="banner ok">Added ${escapeHtml(p.name)}.</div>`;
+    }
+    clearPersonForm('owner'); wizardShow('owner', 1);
+    await loadOwnerData(); renderOwner();
+  }catch(e){
+    banner.innerHTML = `<div class="banner err">${escapeHtml(e.message)}</div>`;
   }
-  save(); clearPersonForm('owner'); wizardShow('owner', 1); renderOwner();
 });
 document.getElementById('owner-cancel-edit').addEventListener('click', () => {
   editingId = null; clearPersonForm('owner'); wizardShow('owner', 1);
@@ -379,7 +395,7 @@ function formatHeight(inches){
 function renderRoster(){
   const tbody = document.querySelector('#roster-table tbody');
   tbody.innerHTML = '';
-  state.islanders.forEach(p => {
+  ownerRoster.forEach(p => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(p.name)}</td>
@@ -395,9 +411,9 @@ function renderRoster(){
       </td>`;
     tbody.appendChild(tr);
   });
-  document.getElementById('roster-count').textContent = state.islanders.length;
+  document.getElementById('roster-count').textContent = ownerRoster.length;
   tbody.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => {
-    const p = state.islanders.find(x=>x.id===b.dataset.edit);
+    const p = ownerRoster.find(x=>x.id===b.dataset.edit);
     if(!p) return;
     editingId = p.id;
     fillPersonForm('owner', p);
@@ -406,41 +422,47 @@ function renderRoster(){
     document.getElementById('owner-cancel-edit').classList.remove('hidden');
     document.getElementById('owner-form-container').scrollIntoView({behavior:'smooth'});
   }));
-  tbody.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
+  tbody.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
     if(!confirm('Remove this islander?')) return;
-    const delId = b.dataset.del;
-    state.islanders = state.islanders.filter(x=>x.id!==delId);
-    state.lockedPairs = state.lockedPairs.filter(pair => pair[0]!==delId && pair[1]!==delId);
-    save(); renderOwner();
+    try{
+      await api('/api/roster', { method:'DELETE', body: JSON.stringify({ id: b.dataset.del }) });
+      await loadOwnerData(); renderOwner();
+    }catch(e){
+      alert(e.message);
+    }
   }));
 }
 
 // ---------- Locked pairs ----------
 function renderLockUI(){
   const a = document.getElementById('lock-a'), b = document.getElementById('lock-b');
-  const opts = state.islanders.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  const opts = ownerRoster.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
   a.innerHTML = `<option value="">Choose islander…</option>` + opts;
   b.innerHTML = `<option value="">Choose islander…</option>` + opts;
   const list = document.getElementById('locked-list');
   list.innerHTML = '';
-  state.lockedPairs.forEach((pair, idx) => {
-    const pa = state.islanders.find(x=>x.id===pair[0]);
-    const pb = state.islanders.find(x=>x.id===pair[1]);
+  ownerState.lockedPairs.forEach((pair, idx) => {
+    const pa = ownerRoster.find(x=>x.id===pair[0]);
+    const pb = ownerRoster.find(x=>x.id===pair[1]);
     const li = document.createElement('li');
     li.innerHTML = `${escapeHtml(pa?pa.name:'?')} × ${escapeHtml(pb?pb.name:'?')} <button class="btn ghost btn-remove-inline" data-unlock="${idx}">remove</button>`;
     list.appendChild(li);
   });
-  list.querySelectorAll('[data-unlock]').forEach(btn => btn.addEventListener('click', () => {
-    state.lockedPairs.splice(parseInt(btn.dataset.unlock,10),1); save(); renderLockUI();
+  list.querySelectorAll('[data-unlock]').forEach(btn => btn.addEventListener('click', async () => {
+    ownerState.lockedPairs.splice(parseInt(btn.dataset.unlock,10),1);
+    await api('/api/state', { method:'PATCH', body: JSON.stringify({ lockedPairs: ownerState.lockedPairs }) });
+    renderLockUI();
   }));
 }
-document.getElementById('lock-add').addEventListener('click', () => {
+document.getElementById('lock-add').addEventListener('click', async () => {
   const a = document.getElementById('lock-a').value, b = document.getElementById('lock-b').value;
   const banner = document.getElementById('match-banner');
   if(!a || !b || a===b){ banner.innerHTML = '<div class="banner err">Pick two different islanders.</div>'; return; }
-  const already = state.lockedPairs.some(pair => pair.includes(a) || pair.includes(b));
+  const already = ownerState.lockedPairs.some(pair => pair.includes(a) || pair.includes(b));
   if(already){ banner.innerHTML = '<div class="banner err">One of these islanders is already locked into a couple.</div>'; return; }
-  state.lockedPairs.push([a,b]); save(); renderLockUI();
+  ownerState.lockedPairs.push([a,b]);
+  await api('/api/state', { method:'PATCH', body: JSON.stringify({ lockedPairs: ownerState.lockedPairs }) });
+  renderLockUI();
   banner.innerHTML = '';
 });
 
@@ -499,8 +521,8 @@ function computeScore(a,b){
   return { score, shared };
 }
 function lockedResults(){
-  return state.lockedPairs.map(pair => {
-    const a = state.islanders.find(x=>x.id===pair[0]), b = state.islanders.find(x=>x.id===pair[1]);
+  return ownerState.lockedPairs.map(pair => {
+    const a = ownerRoster.find(x=>x.id===pair[0]), b = ownerRoster.find(x=>x.id===pair[1]);
     const { shared } = computeScore(a,b);
     return { a, b, shared, mode:'locked' };
   });
@@ -578,8 +600,8 @@ function localSearchImprove(results, leftover, maxPasses){
   return { results, leftover };
 }
 function generateMatches(){
-  const lockedIds = new Set(state.lockedPairs.flat());
-  const pool = state.islanders.filter(p => !lockedIds.has(p.id));
+  const lockedIds = new Set(ownerState.lockedPairs.flat());
+  const pool = ownerRoster.filter(p => !lockedIds.has(p.id));
   const candidates = [];
   for(let i=0;i<pool.length;i++){
     for(let j=i+1;j<pool.length;j++){
@@ -592,13 +614,13 @@ function generateMatches(){
   const { results, leftover } = greedyPair(pool, candidates);
   return localSearchImprove(results, leftover);
 }
-document.getElementById('gen-matches').addEventListener('click', () => {
+document.getElementById('gen-matches').addEventListener('click', async () => {
   const banner = document.getElementById('match-banner');
-  if(state.islanders.length < 2){ banner.innerHTML = '<div class="banner err">Need at least 2 islanders to match.</div>'; return; }
+  if(ownerRoster.length < 2){ banner.innerHTML = '<div class="banner err">Need at least 2 islanders to match.</div>'; return; }
   const { results, leftover } = generateMatches();
-  state.results = { pairs: results.map(r => ({ aId:r.a.id, bId:r.b.id, shared:r.shared, mode:r.mode })), leftoverIds: leftover.map(p=>p.id) };
-  state.revealIndex = 0; state.revealFlipped = false;
-  save();
+  const newResults = { pairs: results.map(r => ({ aId:r.a.id, bId:r.b.id, shared:r.shared, mode:r.mode })), leftoverIds: leftover.map(p=>p.id) };
+  ownerState.results = newResults; ownerState.revealIndex = 0; ownerState.revealFlipped = false;
+  await api('/api/state', { method:'PATCH', body: JSON.stringify({ results: newResults, revealIndex: 0, revealFlipped: false }) });
   banner.innerHTML = `<div class="banner ok">Matched ${results.length} couple(s)${leftover.length ? `, ${leftover.length} still waiting for a spark` : ''}.</div>`;
   renderResults();
 });
@@ -616,24 +638,24 @@ const MODE_BADGE = { locked:'💫 teacher pick', score:'✨ villa pick' };
 function renderResults(){
   const card = document.getElementById('results-card');
   const list = document.getElementById('results-list');
-  if(!state.results){ card.classList.add('hidden'); return; }
+  if(!ownerState.results){ card.classList.add('hidden'); return; }
   card.classList.remove('hidden');
-  const rows = state.results.pairs.map(pr => {
-    const a = state.islanders.find(x=>x.id===pr.aId), b = state.islanders.find(x=>x.id===pr.bId);
+  const rows = ownerState.results.pairs.map(pr => {
+    const a = ownerRoster.find(x=>x.id===pr.aId), b = ownerRoster.find(x=>x.id===pr.bId);
     if(!a||!b) return '';
     return `<div class="banner ok text-left">
       <strong>${escapeHtml(a.name)}</strong> × <strong>${escapeHtml(b.name)}</strong> ${MODE_BADGE[pr.mode]||''}
       <div class="muted">Shared: ${sharedSummary(pr.shared)}</div>
     </div>`;
   }).join('');
-  const leftoverNames = state.results.leftoverIds.map(id => state.islanders.find(x=>x.id===id)).filter(Boolean).map(p=>escapeHtml(p.name));
+  const leftoverNames = ownerState.results.leftoverIds.map(id => ownerRoster.find(x=>x.id===id)).filter(Boolean).map(p=>escapeHtml(p.name));
   list.innerHTML = rows + (leftoverNames.length ? `<p class="leftover">Still finding their spark: ${leftoverNames.join(', ')}</p>` : '');
 }
 
-document.getElementById('reset-all').addEventListener('click', () => {
+document.getElementById('reset-all').addEventListener('click', async () => {
   if(!confirm('This deletes the entire roster, locked pairs, and results (passcode stays). Continue?')) return;
-  state.islanders = []; state.lockedPairs = []; state.results = null; state.revealIndex = 0; state.revealFlipped = false;
-  save(); renderOwner();
+  await api('/api/reset', { method:'POST' });
+  await loadOwnerData(); renderOwner();
 });
 
 // ---------- CSV export ----------
@@ -648,7 +670,7 @@ function downloadCSV(filename, rows){
 }
 document.getElementById('export-roster').addEventListener('click', () => {
   const rows = [['Name','Grade','Open to grades','Identity','Open to','Height','Height Preference','Interests','Vibe','Date Ideas','Music','Activities/Clubs','Texting Style','Dream Match']];
-  state.islanders.forEach(p => rows.push([
+  ownerRoster.forEach(p => rows.push([
     p.name, GRADE_LABEL[p.grade]||'', (p.gradeOpenTo||[]).map(g=>GRADE_LABEL[g]).join(', '),
     IDENTITY_LABEL[p.identity], p.lookingFor.join(', '), formatHeight(p.heightIn), (p.heightPref||[]).join(', '),
     p.interests.join(', '), p.vibes.join(', '), p.dateTypes.join(', '), p.music.join(', '),
@@ -657,35 +679,51 @@ document.getElementById('export-roster').addEventListener('click', () => {
   downloadCSV('villa-roster.csv', rows);
 });
 document.getElementById('export-matches').addEventListener('click', () => {
-  if(!state.results){ alert('Generate matches first.'); return; }
+  if(!ownerState.results){ alert('Generate matches first.'); return; }
   const rows = [['Islander A','Islander B','Match type','Shared traits']];
-  state.results.pairs.forEach(pr => {
-    const a = state.islanders.find(x=>x.id===pr.aId), b = state.islanders.find(x=>x.id===pr.bId);
+  ownerState.results.pairs.forEach(pr => {
+    const a = ownerRoster.find(x=>x.id===pr.aId), b = ownerRoster.find(x=>x.id===pr.bId);
     rows.push([a?a.name:'?', b?b.name:'?', pr.mode||'score', sharedSummary(pr.shared)]);
   });
   downloadCSV('villa-matches.csv', rows);
 });
 
 // ---------- Reveal ----------
-document.getElementById('start-reveal').addEventListener('click', () => { state.revealIndex = 0; state.revealFlipped = false; save(); renderReveal(); showView('reveal'); });
-document.getElementById('reveal-exit').addEventListener('click', () => { showView('owner'); });
-document.getElementById('reveal-flip').addEventListener('click', () => { state.revealFlipped = true; save(); renderReveal(); });
-document.getElementById('reveal-prev').addEventListener('click', () => {
-  if(state.revealIndex>0){ state.revealIndex--; state.revealFlipped=false; save(); renderReveal(); }
+document.getElementById('start-reveal').addEventListener('click', async () => {
+  ownerState.revealIndex = 0; ownerState.revealFlipped = false;
+  await api('/api/state', { method:'PATCH', body: JSON.stringify({ revealIndex:0, revealFlipped:false }) });
+  renderReveal(); showView('reveal');
 });
-document.getElementById('reveal-next').addEventListener('click', () => {
-  if(state.results && state.revealIndex < state.results.pairs.length-1){ state.revealIndex++; state.revealFlipped=false; save(); renderReveal(); }
+document.getElementById('reveal-exit').addEventListener('click', () => { showView('owner'); });
+document.getElementById('reveal-flip').addEventListener('click', async () => {
+  ownerState.revealFlipped = true;
+  await api('/api/state', { method:'PATCH', body: JSON.stringify({ revealFlipped:true }) });
+  renderReveal();
+});
+document.getElementById('reveal-prev').addEventListener('click', async () => {
+  if(ownerState.revealIndex>0){
+    ownerState.revealIndex--; ownerState.revealFlipped=false;
+    await api('/api/state', { method:'PATCH', body: JSON.stringify({ revealIndex: ownerState.revealIndex, revealFlipped:false }) });
+    renderReveal();
+  }
+});
+document.getElementById('reveal-next').addEventListener('click', async () => {
+  if(ownerState.results && ownerState.revealIndex < ownerState.results.pairs.length-1){
+    ownerState.revealIndex++; ownerState.revealFlipped=false;
+    await api('/api/state', { method:'PATCH', body: JSON.stringify({ revealIndex: ownerState.revealIndex, revealFlipped:false }) });
+    renderReveal();
+  }
 });
 function renderReveal(){
   const el = document.getElementById('reveal-card');
-  if(!state.results || !state.results.pairs.length){ el.innerHTML = '<p>No matches generated yet.</p>'; return; }
-  const pr = state.results.pairs[state.revealIndex];
-  const a = state.islanders.find(x=>x.id===pr.aId), b = state.islanders.find(x=>x.id===pr.bId);
-  document.getElementById('reveal-progress').textContent = `Couple ${state.revealIndex+1} of ${state.results.pairs.length}`;
-  document.getElementById('reveal-flip').disabled = state.revealFlipped;
-  document.getElementById('reveal-prev').disabled = state.revealIndex===0;
-  document.getElementById('reveal-next').disabled = state.revealIndex===state.results.pairs.length-1;
-  if(!state.revealFlipped){
+  if(!ownerState.results || !ownerState.results.pairs.length){ el.innerHTML = '<p>No matches generated yet.</p>'; return; }
+  const pr = ownerState.results.pairs[ownerState.revealIndex];
+  const a = ownerRoster.find(x=>x.id===pr.aId), b = ownerRoster.find(x=>x.id===pr.bId);
+  document.getElementById('reveal-progress').textContent = `Couple ${ownerState.revealIndex+1} of ${ownerState.results.pairs.length}`;
+  document.getElementById('reveal-flip').disabled = ownerState.revealFlipped;
+  document.getElementById('reveal-prev').disabled = ownerState.revealIndex===0;
+  document.getElementById('reveal-next').disabled = ownerState.revealIndex===ownerState.results.pairs.length-1;
+  if(!ownerState.revealFlipped){
     el.innerHTML = `
       <div class="dream-match-label">💭 Their Dream Matches 💭</div>
       <div class="clue">"${escapeHtml(a.bio) || 'No description given…'}"</div>

@@ -3,8 +3,30 @@
 A Love Island-style mystery homecoming date matcher for MHHS. Students enter their
 preferences, a teacher runs the matching, and results are revealed mystery-style.
 
-Static site (`index.html` + `styles.css` + `app.js`) — no dependencies, no build
-step, no server. Data lives entirely in the browser's `localStorage`.
+Front end is a static site (`index.html` + `styles.css` + `app.js`, no build
+step, no framework). The roster and match state live in a shared Postgres
+database (Vercel's Neon integration), behind serverless functions in `api/`
+— every student's submission lands in one place no matter what device they
+used, and only someone signed in with the shared owner passcode can view or
+manage it.
+
+- `db/schema.sql` — run once against the database (two tables: `islanders`,
+  `app_state`).
+- `lib/` — shared server helpers: `db.js` (Postgres pool + row mapping),
+  `auth.js` (passcode check + signed session cookie), `validate.js`
+  (server-side re-validation/sanitizing of submissions — never trust the
+  client, since `/api/join` is public).
+- `api/` — `join` (public, adds to the roster), `login`/`logout` (session),
+  `roster` (owner-only: list/add/edit/delete), `state` (owner-only: locked
+  couples, match results, reveal position), `reset` (owner-only: wipe
+  everything except the passcode).
+
+Required environment variables (set in the Vercel project, not in this
+repo): `DATABASE_URL` (added automatically when you connect the Postgres/Neon
+integration under the project's Storage tab), `OWNER_PASSCODE` (the shared
+owner login — change it any time in Vercel → Settings → Environment
+Variables and redeploy), and `SESSION_SECRET` (a long random string used to
+sign login sessions).
 
 `vercel.json` sends a strict `Content-Security-Policy` (no `unsafe-inline` or
 `unsafe-eval`) along with the usual hardening headers (HSTS, `X-Frame-Options`,
@@ -55,5 +77,8 @@ good pairs; the refinement pass found and fixed it.
 
 ## Deploying
 
-Import this repo into Vercel (vercel.com/new), framework preset "Other," no
-build step needed. `main` is the only branch — no branch configuration required.
+Import this repo into Vercel (vercel.com/new), framework preset "Other." `main`
+is the only branch — no branch configuration required. Before it'll work,
+you need to: connect a Postgres database (Storage tab → Neon), run
+`db/schema.sql` against it once, and set the `OWNER_PASSCODE` and
+`SESSION_SECRET` environment variables described above.

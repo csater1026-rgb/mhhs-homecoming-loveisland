@@ -28,7 +28,7 @@
   <section id="view-join" class="view active">
     <div class="card">
       <h2>Enter the Villa 🏝️</h2>
-      <p class="muted">Fill this out once. Your teacher will run the mystery matching after everyone's in — your <strong>Dream Match</strong> description gets shown before your name during the reveal. Everything stays saved only on this device/browser.</p>
+      <p class="muted">Fill this out once. Your teacher will run the mystery matching after everyone's in — your <strong>Dream Match</strong> description gets shown before your name during the reveal. Your answers go straight into the shared villa roster — only the teacher can see the full list.</p>
       <div id="join-form-container"></div>
       <div class="row mt-16">
         <button class="btn primary" id="join-submit">Join the Villa 💌</button>
@@ -45,7 +45,6 @@
       <label class="field"><span>Passcode</span><input type="password" id="gate-input" placeholder="••••••" /></label>
       <div class="row"><button class="btn primary" id="gate-submit">Unlock</button></div>
       <div id="gate-banner"></div>
-      <p class="hint">Heads up: this is a simple classroom gate, not real security — it's stored in this browser only, just to keep students from casually poking around.</p>
     </div>
   </section>
 
@@ -55,7 +54,6 @@
       <div class="row justify-between">
         <h2>Owner Panel 🔒</h2>
         <div class="row">
-          <button class="btn ghost" id="owner-change-pass">Change passcode</button>
           <button class="btn ghost" id="owner-lock">Lock panel</button>
         </div>
       </div>
@@ -137,7 +135,7 @@
     </div>
   </section>
 
-  <footer>All data stays local to this browser (localStorage) — nothing is sent to a server.</footer>
+  <footer>The roster is stored in a shared database — only someone signed in with the owner passcode can view or manage it.</footer>
   <footer class="credit">Created by The Goat</footer>
   <button class="owner-login-link" id="owner-login-bottom">Owner login</button>
 </div>
