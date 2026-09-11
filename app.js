@@ -344,7 +344,7 @@ document.getElementById('join-submit').addEventListener('click', async () => {
     await api('/api/join', { method:'POST', body: JSON.stringify(p) });
     clearPersonForm('join');
     wizardShow('join', 1);
-    banner.innerHTML = `<div class="banner ok">You're in the villa, ${escapeHtml(p.name)}! 💕 Wait for the mystery reveal.</div>`;
+    banner.innerHTML = `<div class="banner ok">You're in the villa, ${escapeHtml(p.name)}! 💕 About a week before homecoming, you'll get an email to your school email letting you know who you've been matched with — you can accept or decline from there.</div>`;
   }catch(e){
     banner.innerHTML = `<div class="banner err">${escapeHtml(e.message)}</div>`;
   }finally{
